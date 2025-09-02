@@ -5,8 +5,8 @@
     "logout_urls": ["https://app1.com/logout"],
     "scopes": ["openid", "email"],
     "custom_scopes": ["app1.api/read", "app1.api/write"],
-    "branding_settings_path": "./branding-setting.json",
-    "branding_assets_path": "./brandingassets.json"
+    "branding_settings_path": "${path.root}/branding-setting.json",
+    "branding_assets_path": "${path.root}/brandingassets.json"
   },
   {
     "name": "app2",
