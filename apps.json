@@ -12,8 +12,7 @@
     "name": "app2",
     "redirect_urls": ["https://app2.com/callback"],
     "logout_urls": ["https://app2.com/logout"],
-    "scopes": ["openid", "profile"],
-    "custom_scopes": ["app2.api/read"],
+    "scopes": [],
     "branding_settings_path": "./branding-setting.json",
     "branding_assets_path": "./brandingassets.json"
   }
