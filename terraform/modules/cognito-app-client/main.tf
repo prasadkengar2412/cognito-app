@@ -36,6 +36,7 @@ resource "aws_cognito_user_pool_client" "app_client" {
   
   depends_on = [
       aws_cognito_resource_server.app_resource_server
+  ]
 }
 
 # Read Branding Files
