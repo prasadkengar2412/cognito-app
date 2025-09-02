@@ -12,7 +12,7 @@
     "name": "app2",
     "redirect_urls": ["https://app2.com/callback"],
     "logout_urls": ["https://app2.com/logout"],
-    "scopes": [],
+    "scopes": ["email"],
     "branding_settings_path": "./branding-setting.json",
     "branding_assets_path": "./brandingassets.json"
   }
