@@ -74,7 +74,7 @@ resource "aws_cognito_user_pool_ui_customization" "styling" {
 
 # Store in Secrets Manager
 resource "aws_secretsmanager_secret" "app_secret" {
-  name        = "ulng-${var.application_name}-secret-${var.env}"
+  name        = "ulng-${var.application_name}-secrets-${var.env}"
   description = "App client secret for ${var.application_name} used for SSO"
 }
 
