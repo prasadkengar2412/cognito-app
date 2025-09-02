@@ -29,7 +29,7 @@ module "app_client" {
   logout_urls            = local.selected.logout_urls
   scopes                 = local.selected.scopes
   custom_scopes          = lookup(local.selected, "custom_scopes", [])
-  branding_settings_path = "${path.root}/../${lookup(local.selected, "branding_settings_path", "branding-setting.json")}"
+  branding_settings_path = "${path.root}/../${lookup(local.selected, "branding_settings_path", "branding-setting.css")}"
   branding_assets_path   = "${path.root}/../${lookup(local.selected, "branding_assets_path", "branding-assets.json")}"
 }
 
