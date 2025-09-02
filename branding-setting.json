@@ -32,7 +32,7 @@
               "active": {
                   "backgroundColor": "354150ff",
                   "borderColor": "89bdeeff",
-                  "textColor": "89bdeeff"
+                  "textColor": "354150ff"
               }
           }
       },
@@ -52,7 +52,7 @@
               "formInclusion": "OUT"
           },
           "darkMode": {
-              "backgroundColor": "0f1b2aff",
+              "backgroundColor": "354150ff",
               "borderColor": "424650ff"
           }
       },
