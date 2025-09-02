@@ -1,6 +1,6 @@
 [
   {
-    "name": "app1",
+    "name": "app3",
     "redirect_urls": ["https://app1.com/callback"],
     "logout_urls": ["https://app1.com/logout"],
     "scopes": ["openid", "email"],
@@ -9,7 +9,7 @@
     "branding_assets_path": "/brandingassets.json"
   },
   {
-    "name": "app2",
+    "name": "app4",
     "redirect_urls": ["https://app2.com/callback"],
     "logout_urls": ["https://app2.com/logout"],
     "scopes": ["openid","email"],
