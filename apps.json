@@ -26,7 +26,7 @@
   },
     {
     "name": "app6",
-    "redirect_urls": ["https://app6.com/callback1"],
+    "redirect_urls": ["https://app6.com/callback1","https://app6.com/callback2"],
     "logout_urls": ["https://app6.com/logout1"],
     "scopes": ["openid","email"],
     "custom_scopes": ["app6.api/read", "app6.api/write"],
