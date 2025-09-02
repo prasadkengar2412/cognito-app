@@ -14,6 +14,9 @@ data "local_file" "apps_config" {
 }
 
 locals {
+  apps = jsondecode(data.local_file.apps_config.content)
+
+  # Create a map containing only the selected app
   selected_app_map = {
     for app in local.apps : app.name => app
     if app.name == var.app_name
