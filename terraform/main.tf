@@ -30,7 +30,7 @@ module "app_client" {
   scopes                 = local.selected.scopes
   custom_scopes          = lookup(local.selected, "custom_scopes", [])
   branding_settings_path = "${path.root}/../${lookup(local.selected, "branding_settings_path", "branding-setting.json")}"
-  branding_assets_path   = "${path.root}/../${lookup(local.selected, "branding_assets_path", "brandingassets.json")}"
+  branding_assets_path   = "${path.root}/../${lookup(local.selected, "branding_assets_path", "branding-assets.json")}"
 }
 
 variable "region" {
