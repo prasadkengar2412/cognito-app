@@ -57,7 +57,7 @@ locals {
 resource "aws_cognito_user_pool_ui_customization" "styling" {
   user_pool_id = data.aws_ssm_parameter.user_pool_id.value
   client_id    = aws_cognito_user_pool_client.app_client.id
-  css          = lookup(local.branding_settings, "css", "")
+  css          = lookup(local.branding_settings, "css", null)
   image_file   = lookup(local.branding_assets, "Bytes", null)
 }
 
