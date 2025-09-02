@@ -6,7 +6,7 @@
     "scopes": ["openid", "email"],
     "custom_scopes": ["app3.api/read", "app3.api/write"],
     "branding_settings_path": "/branding-setting.json",
-    "branding_assets_path": "/brandingassets.json"
+    "branding_assets_path": "/branding-assets.json"
   },
   {
     "name": "app4",
@@ -14,7 +14,7 @@
     "logout_urls": ["https://app4.com/logout"],
     "scopes": ["openid","email"],
     "branding_settings_path": "./branding-setting.json",
-    "branding_assets_path": "./brandingassets.json"
+    "branding_assets_path": "./brandin-gassets.json"
   },
   {
     "name": "app5",
@@ -22,7 +22,7 @@
     "logout_urls": ["https://app5.com/logout"],
     "scopes": ["openid","email"],
     "branding_settings_path": "./branding-setting.json",
-    "branding_assets_path": "./brandingassets.json"
+    "branding_assets_path": "./branding-assets.json"
   }
 
 ]
