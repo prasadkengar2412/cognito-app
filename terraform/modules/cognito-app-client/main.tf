@@ -69,7 +69,7 @@ resource "aws_cognito_user_pool_ui_customization" "styling" {
   image_file   = lookup(local.branding_assets, "Bytes", null)
 
   depends_on = [null_resource.branding_version]
-  }
+  
 }
 
 # Store in Secrets Manager
