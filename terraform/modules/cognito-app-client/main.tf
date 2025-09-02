@@ -7,7 +7,7 @@ data "aws_ssm_parameter" "user_pool_id" {
 
 # Create Resource Server for Custom Scopes (if custom_scopes are provided)
 resource "aws_cognito_resource_server" "app_resource_server" {
-  count       = length(var.custom_scopes) > 0 ? 1 : 0
+  for_each    = length(var.custom_scopes) > 0 ? { "${var.application_name}" = var.application_name } : {}
   user_pool_id = data.aws_ssm_parameter.user_pool_id.value
   identifier   = "${var.application_name}.api"  # e.g., app1.api
   name         = "${var.application_name}_api"
