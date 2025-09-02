@@ -24,7 +24,7 @@ resource "aws_cognito_resource_server" "app_resource_server" {
 
 # Create App Client in existing User Pool
 resource "aws_cognito_user_pool_client" "app_client" {
-  name                                 = "pmg-appclient-${var.application_name}-internal-${var.env}"
+  name                                 = "ulng-appclient-${var.application_name}-internal-${var.env}"
   user_pool_id                         = data.aws_ssm_parameter.user_pool_id.value
   generate_secret                      = true
   callback_urls                        = var.redirect_urls
