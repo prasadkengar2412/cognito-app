@@ -1,6 +1,3 @@
-provider "aws" {
-  region = var.region
-}
 
 # Fetch User Pool ID from SSM Parameter Store
 data "aws_ssm_parameter" "user_pool_id" {
