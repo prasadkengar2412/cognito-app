@@ -59,6 +59,10 @@ resource "aws_cognito_user_pool_ui_customization" "styling" {
   client_id    = aws_cognito_user_pool_client.app_client.id
   css          = lookup(local.branding_settings, "css", null)
   image_file   = lookup(local.branding_assets, "Bytes", null)
+  triggers = {
+    branding_settings_hash = sha1(data.local_file.branding_settings.content)
+    branding_assets_hash   = sha1(data.local_file.branding_assets.content)
+  }
 }
 
 # Store in Secrets Manager
