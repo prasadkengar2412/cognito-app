@@ -21,6 +21,7 @@ resource "aws_cognito_resource_server" "app_resource_server" {
   }
 }
 
+
 # Create App Client in existing User Pool
 resource "aws_cognito_user_pool_client" "app_client" {
   name                                 = "pmg-appclient-${var.application_name}-internal-${var.env}"
@@ -52,6 +53,13 @@ locals {
   branding_settings = jsondecode(data.local_file.branding_settings.content)
   branding_assets   = jsondecode(data.local_file.branding_assets.content)
 }
+resource "null_resource" "branding_version" {
+  triggers = {
+    branding_settings_hash = sha1(data.local_file.branding_settings.content)
+    branding_assets_hash   = sha1(data.local_file.branding_assets.content)
+  }
+}
+
 
 # Apply Styling/Branding to the App Client's Hosted UI
 resource "aws_cognito_user_pool_ui_customization" "styling" {
@@ -59,9 +67,8 @@ resource "aws_cognito_user_pool_ui_customization" "styling" {
   client_id    = aws_cognito_user_pool_client.app_client.id
   css          = lookup(local.branding_settings, "css", null)
   image_file   = lookup(local.branding_assets, "Bytes", null)
-  triggers = {
-    branding_settings_hash = sha1(data.local_file.branding_settings.content)
-    branding_assets_hash   = sha1(data.local_file.branding_assets.content)
+
+  depends_on = [null_resource.branding_version]
   }
 }
 
