@@ -15,5 +15,14 @@
     "scopes": ["openid","email"],
     "branding_settings_path": "./branding-setting.json",
     "branding_assets_path": "./brandingassets.json"
+  },
+  {
+    "name": "app5",
+    "redirect_urls": ["https://app5.com/callback"],
+    "logout_urls": ["https://app5.com/logout"],
+    "scopes": ["openid","email"],
+    "branding_settings_path": "./branding-setting.json",
+    "branding_assets_path": "./brandingassets.json"
   }
+
 ]
