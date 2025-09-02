@@ -21,6 +21,7 @@ locals {
 # Call module only for selected app
 module "app_client" {
   source = "./modules/cognito-app-client"
+  for_each = { for app in local.apps : app.name => app }
 
   region                 = var.region
   application_name       = local.selected.name
