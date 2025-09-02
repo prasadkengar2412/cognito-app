@@ -45,7 +45,7 @@ jobs:
       run: |
         APP_NAME="${{ github.event.inputs.app_name }}"
         if ! jq -e ".[] | select(.name == \"$APP_NAME\")" app.json > /dev/null; then
-          echo "❌ Error: App '$APP_NAME' not found in app.json"
+          echo "❌ Error: App '$APP_NAME' not found in apps.json"
           exit 1
         fi
         echo "✅ App '$APP_NAME' found in app.json"
