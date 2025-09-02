@@ -29,8 +29,8 @@ module "app_clients" {
   logout_urls            = each.value.logout_urls
   scopes                 = each.value.scopes
   custom_scopes          = lookup(each.value, "custom_scopes", [])
-  branding_settings_path = lookup(each.value, "branding_settings_path", "./branding-setting.json")
-  branding_assets_path   = lookup(each.value, "branding_assets_path", "./brandingassets.json")
+  branding_settings_path = "${path.root}/${lookup(local.selected, "branding_settings_path", "branding-setting.json")}"
+  branding_assets_path   = "${path.root}/${lookup(local.selected, "branding_assets_path", "brandingassets.json")}"
 }
 
 variable "region" {
