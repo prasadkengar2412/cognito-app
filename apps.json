@@ -1,17 +1,17 @@
 [
   {
     "name": "app3",
-    "redirect_urls": ["https://app1.com/callback"],
-    "logout_urls": ["https://app1.com/logout"],
+    "redirect_urls": ["https://app3.com/callback"],
+    "logout_urls": ["https://app3.com/logout"],
     "scopes": ["openid", "email"],
-    "custom_scopes": ["app1.api/read", "app1.api/write"],
+    "custom_scopes": ["app3.api/read", "app3.api/write"],
     "branding_settings_path": "/branding-setting.json",
     "branding_assets_path": "/brandingassets.json"
   },
   {
     "name": "app4",
-    "redirect_urls": ["https://app2.com/callback"],
-    "logout_urls": ["https://app2.com/logout"],
+    "redirect_urls": ["https://app4.com/callback"],
+    "logout_urls": ["https://app4.com/logout"],
     "scopes": ["openid","email"],
     "branding_settings_path": "./branding-setting.json",
     "branding_assets_path": "./brandingassets.json"
