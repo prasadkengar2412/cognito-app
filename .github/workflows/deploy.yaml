@@ -1,16 +1,11 @@
 name: Terraform Deploy
 
 on:
-  push:
-    branches:
-      - develop
-      - staging
-      - main
   workflow_dispatch:
     inputs:
       app_name:
-        description: 'App name to destroy (e.g., app1, app2). Leave empty to apply all apps.'
-        required: false
+        description: 'App name to deploy (must exist in app.json)'
+        required: true
         type: string
 
 jobs:
@@ -19,12 +14,15 @@ jobs:
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      TF_VAR_region: us-east-1
+      TF_VAR_region: ${{ vars.REGION }}
+      TF_VAR_short_region: ${{ vars.SHORT_REGION }}
+      TF_VAR_subnet_ids: ${{ vars.SUBNET_IDS }}
+      TF_VAR_kms_key_alias: ${{ vars.KMS_KEY_ALIAS }}
 
     steps:
     - uses: actions/checkout@v4
       with:
-        ref: ${{ github.ref }}  # Check out the branch that triggered the workflow
+        ref: ${{ github.event.inputs.ref || github.ref }}
 
     - name: Determine Environment from Branch
       id: set-env
@@ -36,27 +34,33 @@ jobs:
           main) echo "TF_VAR_env=prod" >> $GITHUB_ENV ;;
           *) echo "Unsupported branch: $BRANCH"; exit 1 ;;
         esac
+
         echo "Environment set to: $TF_VAR_env"
 
     - uses: hashicorp/setup-terraform@v3
       with:
         terraform_version: 1.5.0
 
+    - name: Validate App Name from app.json
+      run: |
+        APP_NAME="${{ github.event.inputs.app_name }}"
+        if ! jq -e ".[] | select(.name == \"$APP_NAME\")" app.json > /dev/null; then
+          echo "❌ Error: App '$APP_NAME' not found in app.json"
+          exit 1
+        fi
+        echo "✅ App '$APP_NAME' found in app.json"
+
     - name: Terraform Init
-      run: terraform init
+      run: |
+        terraform init -backend-config="bucket=terraform-state-test-cognito" \
+                       -backend-config="key=cognito-app-clients/$TF_VAR_env/terraform.tfstate" \
+                       -backend-config="region=$TF_VAR_region" \
+                       -backend-config="dynamodb_table=terraform-locks"
 
-    - name: Terraform Plan
-      if: github.event_name == 'push' || github.event.inputs.app_name == ''
-      run: terraform plan -var="env=$TF_VAR_env" -out=plan.tfout
+    - name: Terraform Plan (Selected App)
+      run: terraform plan -var="env=$TF_VAR_env" -var="region=$TF_VAR_region" \
+                          -target="module.app_clients[\"${{ github.event.inputs.app_name }}\"]" \
+                          -out=plan.tfout
 
-    - name: Terraform Apply
-      if: github.event_name == 'push' || github.event.inputs.app_name == ''
+    - name: Terraform Apply (Selected App)
       run: terraform apply -auto-approve plan.tfout
-
-    - name: Terraform Plan Destroy
-      if: github.event_name == 'workflow_dispatch' && github.event.inputs.app_name != ''
-      run: terraform plan -destroy -var="env=$TF_VAR_env" -target="module.app_clients[\"${{ github.event.inputs.app_name }}\"]" -out=destroy.tfout
-
-    - name: Terraform Destroy
-      if: github.event_name == 'workflow_dispatch' && github.event.inputs.app_name != ''
-      run: terraform apply -auto-approve destroy.tfout
