@@ -23,6 +23,15 @@
     "scopes": ["openid","email"],
     "branding_settings_path": "./branding-setting.json",
     "branding_assets_path": "./branding-assets.json"
+  },
+    {
+    "name": "app6",
+    "redirect_urls": ["https://app6.com/callback"],
+    "logout_urls": ["https://app6.com/logout"],
+    "scopes": ["openid","email"],
+    "custom_scopes": ["app6.api/read", "app6.api/write"],
+    "branding_settings_path": "./branding-setting.json",
+    "branding_assets_path": "./branding-assets.json"
   }
 
 ]
