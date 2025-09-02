@@ -10,7 +10,7 @@ terraform {
 
 # Read app configurations from apps.json
 data "local_file" "apps_config" {
-  filename = "./apps.json"
+  filename = "apps.json"
 }
 
 locals {
