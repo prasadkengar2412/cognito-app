@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       app_name:
-        description: 'App name to deploy (must exist in app.json)'
+        description: 'App name to deploy (must exist in apps.json)'
         required: true
         type: string
 
@@ -44,11 +44,11 @@ jobs:
     - name: Validate App Name from app.json
       run: |
         APP_NAME="${{ github.event.inputs.app_name }}"
-        if ! jq -e ".[] | select(.name == \"$APP_NAME\")" app.json > /dev/null; then
+        if ! jq -e ".[] | select(.name == \"$APP_NAME\")" apps.json > /dev/null; then
           echo "❌ Error: App '$APP_NAME' not found in apps.json"
           exit 1
         fi
-        echo "✅ App '$APP_NAME' found in app.json"
+        echo "✅ App '$APP_NAME' found in apps.json"
 
     - name: Terraform Init
       run: |
