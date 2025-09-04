@@ -63,6 +63,7 @@ resource "null_resource" "branding_version" {
 }
 
 # Apply Advanced Branding via AWS CLI
+# Apply Advanced Branding via AWS CLI
 resource "null_resource" "cognito_branding" {
   triggers = {
     branding_version = null_resource.branding_version.id
@@ -146,6 +147,18 @@ resource "null_resource" "cognito_branding" {
       echo "DEBUG: Branding update successful"
     EOT
   }
+
+  # Clean up temporary files
+  provisioner "local-exec" {
+    when    = destroy
+    command = "rm -f branding_check.json branding_check_error.json branding_output.json branding_error.json update_output.json update_error.json"
+  }
+
+  depends_on = [
+    aws_cognito_user_pool_client.app_client,
+    null_resource.branding_version
+  ]
+}
 # Store in Secrets Manager
 resource "aws_secretsmanager_secret" "app_secret" {
   name        = "ulng-${var.application_name}-secrets-${var.env}"
