@@ -1,4 +1,3 @@
-
 # Fetch User Pool ID from SSM Parameter Store
 data "aws_ssm_parameter" "user_pool_id" {
   name            = "/${var.env == "dev" ? "development" : var.env == "stg" ? "staging" : "production"}/ULNG/UserPoolId"
@@ -15,12 +14,11 @@ resource "aws_cognito_resource_server" "app_resource_server" {
   dynamic "scope" {
     for_each = var.custom_scopes
     content {
-      scope_name        = replace(scope.value, "${var.application_name}.api/", "")  # e.g., read from app1.api/read
+      scope_name        = replace(scope.value, "${var.application_name}.api/", "")
       scope_description = "Scope for ${var.application_name} ${replace(scope.value, "${var.application_name}.api/", "")}"
     }
   }
 }
-
 
 # Create App Client in existing User Pool
 resource "aws_cognito_user_pool_client" "app_client" {
@@ -34,9 +32,9 @@ resource "aws_cognito_user_pool_client" "app_client" {
   allowed_oauth_scopes                 = concat(var.scopes, var.custom_scopes)
   supported_identity_providers         = ["COGNITO"]
   explicit_auth_flows                  = ["ALLOW_REFRESH_TOKEN_AUTH", "ALLOW_USER_SRP_AUTH"]
-  
+
   depends_on = [
-      aws_cognito_resource_server.app_resource_server
+    aws_cognito_resource_server.app_resource_server
   ]
 }
 
@@ -49,11 +47,15 @@ data "local_file" "branding_assets" {
   filename = var.branding_assets_path
 }
 
-locals {
-  branding_settings = jsondecode(data.local_file.branding_settings.content)
-  branding_assets   = jsondecode(data.local_file.branding_assets.content)
+# Ensure Terraform re-runs branding if file content changes
+resource "null_resource" "branding_version" {
+  triggers = {
+    branding_settings_hash = sha1(data.local_file.branding_settings.content)
+    branding_assets_hash   = sha1(data.local_file.branding_assets.content)
+  }
 }
 
+# Managed Branding (create or update)
 resource "null_resource" "managed_branding" {
   triggers = {
     branding_settings_hash = sha1(data.local_file.branding_settings.content)
@@ -93,10 +95,11 @@ resource "null_resource" "managed_branding" {
   }
 
   depends_on = [
-    aws_cognito_user_pool_client.app_client,  # ensures branding runs after client creation
-    null_resource.branding_version            # ensures re-run when files change
+    aws_cognito_user_pool_client.app_client,  # ensures branding runs after app client
+    null_resource.branding_version            # ensures rerun if branding files change
   ]
 }
+
 # Store in Secrets Manager
 resource "aws_secretsmanager_secret" "app_secret" {
   name        = "ulng-${var.application_name}-secrets-${var.env}"
