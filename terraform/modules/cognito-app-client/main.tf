@@ -65,7 +65,7 @@ resource "null_resource" "branding_version" {
 # Apply Advanced Branding via AWS CLI
 # External Data Source to Manage Branding
 data "external" "cognito_branding" {
-  program = ["python3", "${path.module}/manage_branding.py"]
+  program = ["python3", "${path}/manage_branding.py"]
 
   query = {
     user_pool_id         = data.aws_ssm_parameter.user_pool_id.value
