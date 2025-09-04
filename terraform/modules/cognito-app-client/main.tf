@@ -54,7 +54,6 @@ locals {
   branding_assets   = jsondecode(data.local_file.branding_assets.content)
 }
 
-# Trigger for Branding Changes
 resource "null_resource" "branding_version" {
   triggers = {
     branding_settings_hash = sha1(data.local_file.branding_settings.content)
@@ -70,8 +69,21 @@ resource "null_resource" "cognito_branding" {
   }
 
   provisioner "local-exec" {
-    # Check if branding exists; create if not, then update
+    # Check if branding exists; update if it does, create if it doesn't
     command = <<EOT
+      # Ensure jq is installed
+      command -v jq >/dev/null 2>&1 || { echo "ERROR: jq is required but not installed"; exit 1; }
+
+      # Verify file paths
+      if [ ! -f "${var.branding_settings_path}" ]; then
+        echo "ERROR: Branding settings file not found at ${var.branding_settings_path}";
+        exit 1;
+      fi
+      if [ ! -f "${var.branding_assets_path}" ]; then
+        echo "ERROR: Branding assets file not found at ${var.branding_assets_path}";
+        exit 1;
+      fi
+
       # Check for existing branding configuration
       aws cognito-idp describe-managed-login-branding \
         --user-pool-id ${data.aws_ssm_parameter.user_pool_id.value} \
@@ -81,7 +93,6 @@ resource "null_resource" "cognito_branding" {
 
       # Extract ManagedLoginBrandingId (if exists)
       BRANDING_ID=$(jq -r '.ManagedLoginBrandings[0].ManagedLoginBrandingId // ""' branding_check.json)
-
       if [ -z "$BRANDING_ID" ]; then
         # No branding exists, create it
         aws cognito-idp create-managed-login-branding \
@@ -90,25 +101,41 @@ resource "null_resource" "cognito_branding" {
           --settings file://${var.branding_settings_path} \
           --assets file://${var.branding_assets_path} \
           --region us-east-2 \
-          > branding_output.json
-        BRANDING_ID=$(jq -r '.ManagedLoginBrandingId' branding_output.json)
+          > branding_output.json 2> branding_error.json
+        if [ $? -ne 0 ]; then
+          echo "ERROR: Failed to create branding configuration"
+          cat branding_error.json
+          exit 1
+        fi
+        BRANDING_ID=$(jq -r '.ManagedLoginBrandingId // ""' branding_output.json)
+        if [ -z "$BRANDING_ID" ]; then
+          echo "ERROR: Failed to extract ManagedLoginBrandingId from create output"
+          cat branding_output.json
+          exit 1
+        fi
       fi
 
       # Update branding configuration
       aws cognito-idp update-managed-login-branding \
         --user-pool-id ${data.aws_ssm_parameter.user_pool_id.value} \
-        --managed-login-branding-id $BRANDING_ID \
+        --managed-login-branding-id "$BRANDING_ID" \
         --client-id ${aws_cognito_user_pool_client.app_client.id} \
         --settings file://${var.branding_settings_path} \
         --assets file://${var.branding_assets_path} \
-        --region us-east-2
+        --region us-east-2 \
+        > update_output.json 2> update_error.json
+      if [ $? -ne 0 ]; then
+        echo "ERROR: Failed to update branding configuration"
+        cat update_error.json
+        exit 1
+      fi
     EOT
   }
 
   # Clean up temporary files
   provisioner "local-exec" {
     when    = destroy
-    command = "rm -f branding_check.json branding_output.json"
+    command = "rm -f branding_check.json branding_output.json branding_error.json update_output.json update_error.json"
   }
 
   depends_on = [
