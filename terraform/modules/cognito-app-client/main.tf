@@ -75,7 +75,7 @@ resource "null_resource" "cognito_branding" {
       # Check for existing branding configuration
       aws cognito-idp describe-managed-login-branding \
         --user-pool-id ${data.aws_ssm_parameter.user_pool_id.value} \
-        --app-client-ids ${aws_cognito_user_pool_client.app_client.id} \
+        --client-ids ${aws_cognito_user_pool_client.app_client.id} \
         --region us-east-2 \
         > branding_check.json 2>/dev/null || echo "{}" > branding_check.json
 
@@ -86,7 +86,7 @@ resource "null_resource" "cognito_branding" {
         # No branding exists, create it
         aws cognito-idp create-managed-login-branding \
           --user-pool-id ${data.aws_ssm_parameter.user_pool_id.value} \
-          --app-client-ids ${aws_cognito_user_pool_client.app_client.id} \
+          --client-ids ${aws_cognito_user_pool_client.app_client.id} \
           --settings file://${var.branding_settings_path} \
           --assets file://${var.branding_assets_path} \
           --region us-east-2 \
@@ -98,7 +98,7 @@ resource "null_resource" "cognito_branding" {
       aws cognito-idp update-managed-login-branding \
         --user-pool-id ${data.aws_ssm_parameter.user_pool_id.value} \
         --managed-login-branding-id $BRANDING_ID \
-        --app-client-ids ${aws_cognito_user_pool_client.app_client.id} \
+        --client-ids ${aws_cognito_user_pool_client.app_client.id} \
         --settings file://${var.branding_settings_path} \
         --assets file://${var.branding_assets_path} \
         --region us-east-2
