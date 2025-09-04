@@ -89,12 +89,22 @@ resource "null_resource" "cognito_branding" {
         --user-pool-id ${data.aws_ssm_parameter.user_pool_id.value} \
         --client-id ${aws_cognito_user_pool_client.app_client.id} \
         --region us-east-2 \
-        > branding_check.json 2>/dev/null || echo "{}" > branding_check.json
+        > branding_check.json 2> branding_check_error.json
+      if [ $? -ne 0 ]; then
+        echo "ERROR: Failed to describe branding configuration"
+        cat branding_check_error.json
+        exit 1
+      fi
+
+      # Debug: Log the describe output
+      echo "DEBUG: Describe output:"
+      cat branding_check.json
 
       # Extract ManagedLoginBrandingId (if exists)
       BRANDING_ID=$(jq -r '.ManagedLoginBrandings[0].ManagedLoginBrandingId // ""' branding_check.json)
       if [ -z "$BRANDING_ID" ]; then
         # No branding exists, create it
+        echo "DEBUG: No existing branding found, creating new configuration"
         aws cognito-idp create-managed-login-branding \
           --user-pool-id ${data.aws_ssm_parameter.user_pool_id.value} \
           --client-id ${aws_cognito_user_pool_client.app_client.id} \
@@ -113,9 +123,13 @@ resource "null_resource" "cognito_branding" {
           cat branding_output.json
           exit 1
         fi
+        echo "DEBUG: Created branding with ID: $BRANDING_ID"
+      else
+        echo "DEBUG: Existing branding found with ID: $BRANDING_ID"
       fi
 
       # Update branding configuration
+      echo "DEBUG: Updating branding configuration with ID: $BRANDING_ID"
       aws cognito-idp update-managed-login-branding \
         --user-pool-id ${data.aws_ssm_parameter.user_pool_id.value} \
         --managed-login-branding-id "$BRANDING_ID" \
@@ -129,21 +143,9 @@ resource "null_resource" "cognito_branding" {
         cat update_error.json
         exit 1
       fi
+      echo "DEBUG: Branding update successful"
     EOT
   }
-
-  # Clean up temporary files
-  provisioner "local-exec" {
-    when    = destroy
-    command = "rm -f branding_check.json branding_output.json branding_error.json update_output.json update_error.json"
-  }
-
-  depends_on = [
-    aws_cognito_user_pool_client.app_client,
-    null_resource.branding_version
-  ]
-}
-
 # Store in Secrets Manager
 resource "aws_secretsmanager_secret" "app_secret" {
   name        = "ulng-${var.application_name}-secrets-${var.env}"
