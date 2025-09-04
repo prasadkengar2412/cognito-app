@@ -58,40 +58,51 @@ resource "null_resource" "branding_version" {
 # Managed Branding (create or update)
 resource "null_resource" "managed_branding" {
   provisioner "local-exec" {
-    interpreter = ["/bin/bash", "-c"]   # ✅ force bash instead of sh
+    interpreter = ["/bin/bash", "-c"]
     command = <<EOT
       set -euo pipefail
 
       POOL_ID="${data.aws_ssm_parameter.user_pool_id.value}"
       CLIENT_ID="${aws_cognito_user_pool_client.app_client.id}"
-      REGION="${var.region}"
+      REGION="us-east-2"
       SETTINGS_FILE="${var.branding_settings_path}"
       ASSETS_FILE="${var.branding_assets_path}"
 
-      echo "ℹ️ Checking if branding already exists..."
-      if aws cognito-idp describe-managed-login-branding \
+      echo "ℹ️ Checking if branding exists for client $CLIENT_ID..."
+      if BRANDING_JSON=$(aws cognito-idp describe-managed-login-branding-by-client \
         --region "$REGION" \
         --user-pool-id "$POOL_ID" \
-        --client-id "$CLIENT_ID" >/dev/null 2>&1; then
-          echo "✅ Branding already exists, skipping create"
+        --client-id "$CLIENT_ID" 2>/dev/null); then
+          
+          BRANDING_ID=$(echo "$BRANDING_JSON" | jq -r '.ManagedLoginBranding.ManagedLoginBrandingId')
+          echo "ℹ️ Branding exists (ID: $BRANDING_ID), updating..."
+          
+          aws cognito-idp update-managed-login-branding \
+            --region "$REGION" \
+            --user-pool-id "$POOL_ID" \
+            --managed-login-branding-id "$BRANDING_ID" \
+            --settings "file://$SETTINGS_FILE" \
+            --assets "file://$ASSETS_FILE"
+          
+          echo "✅ Branding updated successfully"
+
       else
-          echo "ℹ️ Creating branding for client $CLIENT_ID"
+          echo "ℹ️ Branding not found, creating..."
           aws cognito-idp create-managed-login-branding \
             --region "$REGION" \
             --user-pool-id "$POOL_ID" \
             --client-id "$CLIENT_ID" \
             --settings "file://$SETTINGS_FILE" \
             --assets "file://$ASSETS_FILE"
+          
+          echo "✅ Branding created successfully"
       fi
     EOT
   }
 
-  lifecycle {
-    ignore_changes = all
-  }
-
   depends_on = [aws_cognito_user_pool_client.app_client]
 }
+
 
 # Store in Secrets Manager
 resource "aws_secretsmanager_secret" "app_secret" {
