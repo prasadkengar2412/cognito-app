@@ -63,109 +63,17 @@ resource "null_resource" "branding_version" {
 }
 
 # Apply Advanced Branding via AWS CLI
-# Apply Advanced Branding via AWS CLI
-resource "null_resource" "cognito_branding" {
-  triggers = {
-    branding_version = null_resource.branding_version.id
-  }
+# External Data Source to Manage Branding
+data "external" "cognito_branding" {
+  program = ["python3", "${path.module}/manage_branding.py"]
 
-  provisioner "local-exec" {
-    # Check if branding exists; update if it does, create if it doesn't
-    command = <<EOT
-      # Ensure jq is installed
-      command -v jq >/dev/null 2>&1 || { echo "ERROR: jq is required but not installed"; exit 1; }
-
-      # Verify file paths
-      if [ ! -f "${var.branding_settings_path}" ]; then
-        echo "ERROR: Branding settings file not found at ${var.branding_settings_path}";
-        exit 1;
-      fi
-      if [ ! -f "${var.branding_assets_path}" ]; then
-        echo "ERROR: Branding assets file not found at ${var.branding_assets_path}";
-        exit 1;
-      fi
-
-      # Check for existing branding configuration for the user pool
-      echo "DEBUG: Running describe-managed-login-branding"
-      aws cognito-idp describe-managed-login-branding \
-        --user-pool-id ${data.aws_ssm_parameter.user_pool_id.value} \
-        --region us-east-2 \
-        > branding_check.json 2> branding_check_error.json
-      if [ $? -ne 0 ]; then
-        echo "ERROR: Failed to describe branding configuration"
-        cat branding_check_error.json
-        exit 1
-      fi
-
-      # Debug: Log the describe output
-      echo "DEBUG: Describe output:"
-      cat branding_check.json
-
-      # Extract ManagedLoginBrandingId for the specific client-id
-      BRANDING_ID=$(jq -r --arg client_id "${aws_cognito_user_pool_client.app_client.id}" \
-        '.ManagedLoginBrandings[] | select(.ClientId == $client_id) | .ManagedLoginBrandingId // ""' branding_check.json)
-      if [ -z "$BRANDING_ID" ]; then
-        # No branding exists, create it
-        echo "DEBUG: No existing branding found for client ${aws_cognito_user_pool_client.app_client.id}, creating new configuration"
-        aws cognito-idp create-managed-login-branding \
-          --user-pool-id ${data.aws_ssm_parameter.user_pool_id.value} \
-          --client-id ${aws_cognito_user_pool_client.app_client.id} \
-          --settings file://${var.branding_settings_path} \
-          --assets file://${var.branding_assets_path} \
-          --region us-east-2 \
-          > branding_output.json 2> branding_error.json
-        if [ $? -ne 0 ]; then
-          echo "ERROR: Failed to create branding configuration"
-          cat branding_error.json
-          # Check if error is due to existing branding
-          if grep -q "ManagedLoginBrandingExistsException" branding_error.json; then
-            echo "DEBUG: Branding already exists, attempting to find existing ID"
-            BRANDING_ID=$(jq -r --arg client_id "${aws_cognito_user_pool_client.app_client.id}" \
-              '.ManagedLoginBrandings[] | select(.ClientId == $client_id) | .ManagedLoginBrandingId // ""' branding_check.json)
-            if [ -z "$BRANDING_ID" ]; then
-              echo "ERROR: Failed to extract existing ManagedLoginBrandingId despite existing configuration"
-              exit 1
-            fi
-            echo "DEBUG: Found existing branding ID: $BRANDING_ID"
-          else
-            exit 1
-          fi
-        else
-          BRANDING_ID=$(jq -r '.ManagedLoginBrandingId // ""' branding_output.json)
-          if [ -z "$BRANDING_ID" ]; then
-            echo "ERROR: Failed to extract ManagedLoginBrandingId from create output"
-            cat branding_output.json
-            exit 1
-          fi
-          echo "DEBUG: Created branding with ID: $BRANDING_ID"
-        fi
-      else
-        echo "DEBUG: Existing branding found with ID: $BRANDING_ID"
-      fi
-
-      # Update branding configuration
-      echo "DEBUG: Updating branding configuration with ID: $BRANDING_ID"
-      aws cognito-idp update-managed-login-branding \
-        --user-pool-id ${data.aws_ssm_parameter.user_pool_id.value} \
-        --managed-login-branding-id "$BRANDING_ID" \
-        --client-id ${aws_cognito_user_pool_client.app_client.id} \
-        --settings file://${var.branding_settings_path} \
-        --assets file://${var.branding_assets_path} \
-        --region us-east-2 \
-        > update_output.json 2> update_error.json
-      if [ $? -ne 0 ]; then
-        echo "ERROR: Failed to update branding configuration"
-        cat update_error.json
-        exit 1
-      fi
-      echo "DEBUG: Branding update successful"
-    EOT
-  }
-
-  # Clean up temporary files
-  provisioner "local-exec" {
-    when    = destroy
-    command = "rm -f branding_check.json branding_check_error.json branding_output.json branding_error.json update_output.json update_error.json"
+  query = {
+    user_pool_id         = data.aws_ssm_parameter.user_pool_id.value
+    client_id           = aws_cognito_user_pool_client.app_client.id
+    settings_path       = var.branding_settings_path
+    assets_path         = var.branding_assets_path
+    region              = "us-east-2"
+    branding_version_id = null_resource.branding_version.id
   }
 
   depends_on = [
