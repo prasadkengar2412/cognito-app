@@ -54,15 +54,6 @@ locals {
   branding_assets   = jsondecode(data.local_file.branding_assets.content)
 }
 
-resource "null_resource" "branding_version" {
-  triggers = {
-    branding_settings_hash = sha1(data.local_file.branding_settings.content)
-    branding_assets_hash   = sha1(data.local_file.branding_assets.content)
-    app_client_id         = aws_cognito_user_pool_client.app_client.id
-  }
-}
-
-# Apply Advanced Branding via AWS CLI
 resource "null_resource" "managed_branding" {
   triggers = {
     branding_settings_hash = sha1(data.local_file.branding_settings.content)
@@ -70,18 +61,40 @@ resource "null_resource" "managed_branding" {
   }
 
   provisioner "local-exec" {
+    interpreter = ["/bin/bash", "-c"]
     command = <<EOT
-      aws cognito-idp update-managed-login-branding \
-        --user-pool-id ${data.aws_ssm_parameter.user_pool_id.value} \
-        --app-client-id ${aws_cognito_user_pool_client.app_client.id} \
-        --settings file://${var.branding_settings_path} \
-        --assets file://${var.branding_assets_path}
+      set -euo pipefail
+
+      POOL_ID="${data.aws_ssm_parameter.user_pool_id.value}"
+      CLIENT_ID="${aws_cognito_user_pool_client.app_client.id}"
+      SETTINGS_FILE="${var.branding_settings_path}"
+      ASSETS_FILE="${var.branding_assets_path}"
+
+      echo "ℹ️ Checking if branding exists for client $CLIENT_ID"
+
+      if aws cognito-idp describe-managed-login-branding \
+          --user-pool-id "$POOL_ID" \
+          --client-id "$CLIENT_ID" >/dev/null 2>&1; then
+        echo "ℹ️ Branding exists, updating..."
+        aws cognito-idp update-managed-login-branding \
+          --user-pool-id "$POOL_ID" \
+          --client-id "$CLIENT_ID" \
+          --settings "file://$SETTINGS_FILE" \
+          --assets "file://$ASSETS_FILE"
+      else
+        echo "ℹ️ Branding not found, creating..."
+        aws cognito-idp create-managed-login-branding \
+          --user-pool-id "$POOL_ID" \
+          --client-id "$CLIENT_ID" \
+          --settings "file://$SETTINGS_FILE" \
+          --assets "file://$ASSETS_FILE"
+      fi
     EOT
   }
 
   depends_on = [
-    aws_cognito_user_pool_client.app_client,
-    null_resource.branding_version
+    aws_cognito_user_pool_client.app_client,  # ensures branding runs after client creation
+    null_resource.branding_version            # ensures re-run when files change
   ]
 }
 # Store in Secrets Manager
