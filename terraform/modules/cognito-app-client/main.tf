@@ -62,7 +62,7 @@ resource "null_resource" "managed_branding" {
     branding_assets_hash   = sha1(data.local_file.branding_assets.content)
   }
 
-  provisioner "local-exec" {
+   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
     command = <<EOT
       set -euo pipefail
@@ -73,27 +73,24 @@ resource "null_resource" "managed_branding" {
       ASSETS_FILE="${var.branding_assets_path}"
       REGION="${var.region}"
 
-      echo "ℹ️ Checking if branding exists for client $CLIENT_ID"
+      echo "ℹ️ Applying branding for client $CLIENT_ID in region $REGION"
 
-      if aws cognito-idp describe-managed-login-branding \
+      if aws cognito-idp create-managed-login-branding \
           --region "$REGION" \
           --user-pool-id "$POOL_ID" \
-          --client-id "$CLIENT_ID" >/dev/null 2>&1; then
-        echo "ℹ️ Branding exists, updating..."
+          --client-id "$CLIENT_ID" \
+          --settings "file://$SETTINGS_FILE" \
+          --assets "file://$ASSETS_FILE"; then
+        echo "✅ Branding created successfully"
+      else
+        echo "ℹ️ Branding already exists, updating instead..."
         aws cognito-idp update-managed-login-branding \
           --region "$REGION" \
           --user-pool-id "$POOL_ID" \
           --client-id "$CLIENT_ID" \
           --settings "file://$SETTINGS_FILE" \
           --assets "file://$ASSETS_FILE"
-      else
-        echo "ℹ️ Branding not found, creating..."
-        aws cognito-idp create-managed-login-branding \
-          --region "$REGION" \
-          --user-pool-id "$POOL_ID" \
-          --client-id "$CLIENT_ID" \
-          --settings "file://$SETTINGS_FILE" \
-          --assets "file://$ASSETS_FILE"
+        echo "✅ Branding updated successfully"
       fi
     EOT
   }
