@@ -73,7 +73,7 @@ resource "null_resource" "managed_branding" {
     command = <<EOT
       aws cognito-idp update-managed-login-branding \
         --user-pool-id ${data.aws_ssm_parameter.user_pool_id.value} \
-        --client-id ${aws_cognito_user_pool_client.app_client.id} \
+        --app-client-id ${aws_cognito_user_pool_client.app_client.id} \
         --settings file://${var.branding_settings_path} \
         --assets file://${var.branding_assets_path}
     EOT
