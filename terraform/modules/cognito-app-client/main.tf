@@ -53,23 +53,68 @@ locals {
   branding_settings = jsondecode(data.local_file.branding_settings.content)
   branding_assets   = jsondecode(data.local_file.branding_assets.content)
 }
+
+# Trigger for Branding Changes
 resource "null_resource" "branding_version" {
   triggers = {
     branding_settings_hash = sha1(data.local_file.branding_settings.content)
     branding_assets_hash   = sha1(data.local_file.branding_assets.content)
+    app_client_id         = aws_cognito_user_pool_client.app_client.id
   }
 }
 
+# Apply Advanced Branding via AWS CLI
+resource "null_resource" "cognito_branding" {
+  triggers = {
+    branding_version = null_resource.branding_version.id
+  }
 
-# Apply Styling/Branding to the App Client's Hosted UI
-resource "aws_cognito_user_pool_ui_customization" "styling" {
-  user_pool_id = data.aws_ssm_parameter.user_pool_id.value
-  client_id    = aws_cognito_user_pool_client.app_client.id
-  css          = lookup(local.branding_settings, "css", null)
-  image_file   = lookup(local.branding_assets, "Bytes", null)
+  provisioner "local-exec" {
+    # Check if branding exists; create if not, then update
+    command = <<EOT
+      # Check for existing branding configuration
+      aws cognito-idp describe-managed-login-branding \
+        --user-pool-id ${data.aws_ssm_parameter.user_pool_id.value} \
+        --app-client-ids ${aws_cognito_user_pool_client.app_client.id} \
+        --region us-east-2 \
+        > branding_check.json 2>/dev/null || echo "{}" > branding_check.json
 
-  depends_on = [null_resource.branding_version]
-  
+      # Extract ManagedLoginBrandingId (if exists)
+      BRANDING_ID=$(jq -r '.ManagedLoginBrandings[0].ManagedLoginBrandingId // ""' branding_check.json)
+
+      if [ -z "$BRANDING_ID" ]; then
+        # No branding exists, create it
+        aws cognito-idp create-managed-login-branding \
+          --user-pool-id ${data.aws_ssm_parameter.user_pool_id.value} \
+          --app-client-ids ${aws_cognito_user_pool_client.app_client.id} \
+          --settings file://${var.branding_settings_path} \
+          --assets file://${var.branding_assets_path} \
+          --region us-east-2 \
+          > branding_output.json
+        BRANDING_ID=$(jq -r '.ManagedLoginBrandingId' branding_output.json)
+      fi
+
+      # Update branding configuration
+      aws cognito-idp update-managed-login-branding \
+        --user-pool-id ${data.aws_ssm_parameter.user_pool_id.value} \
+        --managed-login-branding-id $BRANDING_ID \
+        --app-client-ids ${aws_cognito_user_pool_client.app_client.id} \
+        --settings file://${var.branding_settings_path} \
+        --assets file://${var.branding_assets_path} \
+        --region us-east-2
+    EOT
+  }
+
+  # Clean up temporary files
+  provisioner "local-exec" {
+    when    = destroy
+    command = "rm -f branding_check.json branding_output.json"
+  }
+
+  depends_on = [
+    aws_cognito_user_pool_client.app_client,
+    null_resource.branding_version
+  ]
 }
 
 # Store in Secrets Manager
