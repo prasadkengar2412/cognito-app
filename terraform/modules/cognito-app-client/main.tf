@@ -71,6 +71,7 @@ resource "null_resource" "managed_branding" {
       CLIENT_ID="${aws_cognito_user_pool_client.app_client.id}"
       SETTINGS_FILE="${var.branding_settings_path}"
       ASSETS_FILE="${var.branding_assets_path}"
+      REGION="${var.region}"
 
       echo "ℹ️ Checking if branding exists for client $CLIENT_ID"
 
