@@ -76,10 +76,12 @@ resource "null_resource" "managed_branding" {
       echo "ℹ️ Checking if branding exists for client $CLIENT_ID"
 
       if aws cognito-idp describe-managed-login-branding \
+          --region "$REGION" \
           --user-pool-id "$POOL_ID" \
           --client-id "$CLIENT_ID" >/dev/null 2>&1; then
         echo "ℹ️ Branding exists, updating..."
         aws cognito-idp update-managed-login-branding \
+          --region "$REGION" \
           --user-pool-id "$POOL_ID" \
           --client-id "$CLIENT_ID" \
           --settings "file://$SETTINGS_FILE" \
@@ -87,6 +89,7 @@ resource "null_resource" "managed_branding" {
       else
         echo "ℹ️ Branding not found, creating..."
         aws cognito-idp create-managed-login-branding \
+          --region "$REGION" \
           --user-pool-id "$POOL_ID" \
           --client-id "$CLIENT_ID" \
           --settings "file://$SETTINGS_FILE" \
