@@ -30,7 +30,7 @@
     "logout_urls": ["https://app6.com/logout1"],
     "scopes": ["openid","email"],
     "custom_scopes": ["app6.api/read", "app6.api/write"],
-    "branding_settings_path": "./branding-setting.css",
+    "branding_settings_path": "./branding-setting.json",
     "branding_assets_path": "./branding-assets.json"
   }
 
