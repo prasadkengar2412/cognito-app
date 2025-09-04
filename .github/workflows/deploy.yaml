@@ -31,8 +31,15 @@ jobs:
         curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
         unzip -q awscliv2.zip
         sudo ./aws/install --update
-        aws --version
-        aws cognito-idp update-managed-login-branding help | grep -- "--app-client-id" || (echo "❌ CLI too old, upgrade failed" && exit 1)
+        /usr/local/bin/aws --version
+
+    - name: Verify AWS CLI supports managed branding
+      run: |
+        if ! aws cognito-idp update-managed-login-branding help | grep -q -- "--app-client-id"; then
+          echo "❌ Installed AWS CLI does not support managed login branding."
+          exit 1
+        fi
+        echo "✅ AWS CLI supports managed login branding."
 
     - name: Determine Environment from Branch
       id: set-env
