@@ -85,10 +85,10 @@ resource "null_resource" "cognito_branding" {
         exit 1;
       fi
 
-      # Check for existing branding configuration
+      # Check for existing branding configuration for the user pool
+      echo "DEBUG: Running describe-managed-login-branding"
       aws cognito-idp describe-managed-login-branding \
         --user-pool-id ${data.aws_ssm_parameter.user_pool_id.value} \
-        --client-id ${aws_cognito_user_pool_client.app_client.id} \
         --region us-east-2 \
         > branding_check.json 2> branding_check_error.json
       if [ $? -ne 0 ]; then
@@ -101,11 +101,12 @@ resource "null_resource" "cognito_branding" {
       echo "DEBUG: Describe output:"
       cat branding_check.json
 
-      # Extract ManagedLoginBrandingId (if exists)
-      BRANDING_ID=$(jq -r '.ManagedLoginBrandings[0].ManagedLoginBrandingId // ""' branding_check.json)
+      # Extract ManagedLoginBrandingId for the specific client-id
+      BRANDING_ID=$(jq -r --arg client_id "${aws_cognito_user_pool_client.app_client.id}" \
+        '.ManagedLoginBrandings[] | select(.ClientId == $client_id) | .ManagedLoginBrandingId // ""' branding_check.json)
       if [ -z "$BRANDING_ID" ]; then
         # No branding exists, create it
-        echo "DEBUG: No existing branding found, creating new configuration"
+        echo "DEBUG: No existing branding found for client ${aws_cognito_user_pool_client.app_client.id}, creating new configuration"
         aws cognito-idp create-managed-login-branding \
           --user-pool-id ${data.aws_ssm_parameter.user_pool_id.value} \
           --client-id ${aws_cognito_user_pool_client.app_client.id} \
@@ -116,15 +117,28 @@ resource "null_resource" "cognito_branding" {
         if [ $? -ne 0 ]; then
           echo "ERROR: Failed to create branding configuration"
           cat branding_error.json
-          exit 1
+          # Check if error is due to existing branding
+          if grep -q "ManagedLoginBrandingExistsException" branding_error.json; then
+            echo "DEBUG: Branding already exists, attempting to find existing ID"
+            BRANDING_ID=$(jq -r --arg client_id "${aws_cognito_user_pool_client.app_client.id}" \
+              '.ManagedLoginBrandings[] | select(.ClientId == $client_id) | .ManagedLoginBrandingId // ""' branding_check.json)
+            if [ -z "$BRANDING_ID" ]; then
+              echo "ERROR: Failed to extract existing ManagedLoginBrandingId despite existing configuration"
+              exit 1
+            fi
+            echo "DEBUG: Found existing branding ID: $BRANDING_ID"
+          else
+            exit 1
+          fi
+        else
+          BRANDING_ID=$(jq -r '.ManagedLoginBrandingId // ""' branding_output.json)
+          if [ -z "$BRANDING_ID" ]; then
+            echo "ERROR: Failed to extract ManagedLoginBrandingId from create output"
+            cat branding_output.json
+            exit 1
+          fi
+          echo "DEBUG: Created branding with ID: $BRANDING_ID"
         fi
-        BRANDING_ID=$(jq -r '.ManagedLoginBrandingId // ""' branding_output.json)
-        if [ -z "$BRANDING_ID" ]; then
-          echo "ERROR: Failed to extract ManagedLoginBrandingId from create output"
-          cat branding_output.json
-          exit 1
-        fi
-        echo "DEBUG: Created branding with ID: $BRANDING_ID"
       else
         echo "DEBUG: Existing branding found with ID: $BRANDING_ID"
       fi
