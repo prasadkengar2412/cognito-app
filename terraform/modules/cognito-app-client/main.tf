@@ -63,17 +63,20 @@ resource "null_resource" "branding_version" {
 }
 
 # Apply Advanced Branding via AWS CLI
-# External Data Source to Manage Branding
-data "external" "cognito_branding" {
-  program = ["python3", "${path.module}/manage_branding.py"]
+resource "null_resource" "managed_branding" {
+  triggers = {
+    branding_settings_hash = sha1(data.local_file.branding_settings.content)
+    branding_assets_hash   = sha1(data.local_file.branding_assets.content)
+  }
 
-  query = {
-    user_pool_id         = data.aws_ssm_parameter.user_pool_id.value
-    client_id           = aws_cognito_user_pool_client.app_client.id
-    settings_path       = var.branding_settings_path
-    assets_path         = var.branding_assets_path
-    region              = "us-east-2"
-    branding_version_id = null_resource.branding_version.id
+  provisioner "local-exec" {
+    command = <<EOT
+      aws cognito-idp update-managed-login-branding \
+        --user-pool-id ${data.aws_ssm_parameter.user_pool_id.value} \
+        --app-client-id ${aws_cognito_user_pool_client.app_client.id} \
+        --settings file://${var.branding_settings_path} \
+        --assets file://${var.branding_assets_path}
+    EOT
   }
 
   depends_on = [
