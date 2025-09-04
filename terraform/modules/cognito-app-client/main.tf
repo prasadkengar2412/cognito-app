@@ -57,50 +57,41 @@ resource "null_resource" "branding_version" {
 
 # Managed Branding (create or update)
 resource "null_resource" "managed_branding" {
-  triggers = {
-    branding_settings_hash = sha1(data.local_file.branding_settings.content)
-    branding_assets_hash   = sha1(data.local_file.branding_assets.content)
-  }
-
-   provisioner "local-exec" {
-    interpreter = ["/bin/bash", "-c"]
+  provisioner "local-exec" {
+    when    = create
     command = <<EOT
       set -euo pipefail
 
       POOL_ID="${data.aws_ssm_parameter.user_pool_id.value}"
       CLIENT_ID="${aws_cognito_user_pool_client.app_client.id}"
+      REGION="${var.region}"
       SETTINGS_FILE="${var.branding_settings_path}"
       ASSETS_FILE="${var.branding_assets_path}"
-      REGION="${var.region}"
 
-      echo "ℹ️ Applying branding for client $CLIENT_ID in region $REGION"
-
-      if aws cognito-idp create-managed-login-branding \
-          --region "$REGION" \
-          --user-pool-id "$POOL_ID" \
-          --client-id "$CLIENT_ID" \
-          --settings "file://$SETTINGS_FILE" \
-          --assets "file://$ASSETS_FILE"; then
-        echo "✅ Branding created successfully"
+      echo "ℹ️ Checking if branding already exists..."
+      if aws cognito-idp describe-managed-login-branding \
+        --region "$REGION" \
+        --user-pool-id "$POOL_ID" \
+        --client-id "$CLIENT_ID" >/dev/null 2>&1; then
+          echo "✅ Branding already exists, skipping create"
       else
-        echo "ℹ️ Branding already exists, updating instead..."
-        aws cognito-idp update-managed-login-branding \
-          --region "$REGION" \
-          --user-pool-id "$POOL_ID" \
-          --client-id "$CLIENT_ID" \
-          --settings "file://$SETTINGS_FILE" \
-          --assets "file://$ASSETS_FILE"
-        echo "✅ Branding updated successfully"
+          echo "ℹ️ Creating branding for client $CLIENT_ID"
+          aws cognito-idp create-managed-login-branding \
+            --region "$REGION" \
+            --user-pool-id "$POOL_ID" \
+            --client-id "$CLIENT_ID" \
+            --settings "file://$SETTINGS_FILE" \
+            --assets "file://$ASSETS_FILE"
       fi
     EOT
   }
 
-  depends_on = [
-    aws_cognito_user_pool_client.app_client,  # ensures branding runs after app client
-    null_resource.branding_version            # ensures rerun if branding files change
-  ]
-}
+  lifecycle {
+    ignore_changes = all
+  }
 
+  depends_on = [aws_cognito_user_pool_client.app_client]
+}
 # Store in Secrets Manager
 resource "aws_secretsmanager_secret" "app_secret" {
   name        = "ulng-${var.application_name}-secrets-${var.env}"
