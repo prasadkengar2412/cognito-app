@@ -33,14 +33,6 @@ jobs:
         sudo ./aws/install --update
         /usr/local/bin/aws --version
 
-    - name: Verify AWS CLI supports managed branding
-      run: |
-        if ! aws cognito-idp update-managed-login-branding help | grep -q -- "--app-client-id"; then
-          echo "❌ Installed AWS CLI does not support managed login branding."
-          exit 1
-        fi
-        echo "✅ AWS CLI supports managed login branding."
-
     - name: Determine Environment from Branch
       id: set-env
       run: |
