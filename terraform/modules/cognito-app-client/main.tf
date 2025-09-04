@@ -58,7 +58,7 @@ resource "null_resource" "branding_version" {
 # Managed Branding (create or update)
 resource "null_resource" "managed_branding" {
   provisioner "local-exec" {
-    when    = create
+    interpreter = ["/bin/bash", "-c"]   # ✅ force bash instead of sh
     command = <<EOT
       set -euo pipefail
 
@@ -92,6 +92,7 @@ resource "null_resource" "managed_branding" {
 
   depends_on = [aws_cognito_user_pool_client.app_client]
 }
+
 # Store in Secrets Manager
 resource "aws_secretsmanager_secret" "app_secret" {
   name        = "ulng-${var.application_name}-secrets-${var.env}"
