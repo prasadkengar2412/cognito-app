@@ -11,11 +11,11 @@ locals {
 }
 
 # Create Resource Server for Custom Scopes (if custom_scopes are provided)
-resource "aws_cognito_resource_server" "app_resource_server" {
-  for_each     = length(var.custom_scopes) > 0 ? { "${var.application_name}" = var.application_name } : {}
-  user_pool_id = data.aws_ssm_parameter.user_pool_id.value
-  identifier   = local.effective_resource_server_identifier
-  name         = local.effective_resource_server_name
+#resource "aws_cognito_resource_server" "app_resource_server" {
+#  for_each     = length(var.custom_scopes) > 0 ? { "${var.application_name}" = var.application_name } : {}
+#  user_pool_id = data.aws_ssm_parameter.user_pool_id.value
+#  identifier   = local.effective_resource_server_identifier
+ # name         = local.effective_resource_server_name
 
   dynamic "scope" {
     for_each = var.custom_scopes
