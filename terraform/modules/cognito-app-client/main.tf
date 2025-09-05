@@ -168,3 +168,25 @@ resource "aws_secretsmanager_secret_version" "app_secret_version" {
     clientsecret = aws_cognito_user_pool_client.app_client.client_secret
   })
 }
+resource "null_resource" "secret_cleanup" {
+  triggers = {
+    secret_arn = aws_secretsmanager_secret.app_secret.arn
+    region     = var.region
+  }
+
+  provisioner "local-exec" {
+    when    = destroy
+    interpreter = ["/bin/bash", "-c"]
+    command = <<EOT
+      set -euo pipefail
+      echo "ℹ️ Permanently deleting secret ${self.triggers.secret_arn}"
+      aws secretsmanager delete-secret \
+        --region "${self.triggers.region}" \
+        --secret-id "${self.triggers.secret_arn}" \
+        --force-delete-without-recovery 2>secret_cleanup_error.log || echo "Secret already deleted or not found"
+      cat secret_cleanup_error.log
+    EOT
+  }
+
+  depends_on = [aws_secretsmanager_secret.app_secret]
+}
