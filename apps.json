@@ -1,46 +1,49 @@
 [
   {
     "name": "app3",
+    "client_type": "internal",
     "redirect_urls": ["https://app3.com/callback"],
     "logout_urls": ["https://app3.com/logout"],
     "scopes": ["openid", "email"],
     "custom_scopes": ["app3.api/read", "app3.api/write"],
-    "branding_settings_path": "/branding-setting.json",
-    "branding_assets_path": "/branding-assets.json"
+    "branding_settings_path": "branding-setting.json",
+    "branding_assets_path": "branding-assets.json"
   },
   {
     "name": "app4",
+    "client_type": "external",
     "redirect_urls": ["https://app4.com/callback"],
     "logout_urls": ["https://app4.com/logout"],
     "scopes": ["openid","email"],
-    "branding_settings_path": "./branding-setting.json",
-    "branding_assets_path": "./branding-assets.json",
+    "branding_settings_path": "branding-setting.json",
+    "branding_assets_path": "branding-assets.json",
     "access_token_validity": { "value": 60, "unit": "minutes" },
     "id_token_validity": { "value": 60, "unit": "minutes" },
     "refresh_token_validity": { "value": 30, "unit": "days" }
   },
   {
     "name": "app5",
+    "client_type": "internal",
     "redirect_urls": ["https://app5.com/callback"],
     "logout_urls": ["https://app5.com/logout"],
     "scopes": ["openid","email"],
-    "branding_settings_path": "./branding-setting.json",
-    "branding_assets_path": "./branding-assets.json",
+    "branding_settings_path": "branding-setting.json",
+    "branding_assets_path": "branding-assets.json",
     "access_token_validity": { "value": 30, "unit": "minutes" },
     "id_token_validity": { "value": 30, "unit": "minutes" },
     "refresh_token_validity": { "value": 15, "unit": "days" }
   },
-    {
+  {
     "name": "app6",
+    "client_type": "external",
     "redirect_urls": ["https://app6.com/callback1","https://app6.com/callback2"],
     "logout_urls": ["https://app6.com/logout1"],
     "scopes": ["openid","email"],
     "custom_scopes": ["app6.api/read", "app6.api/write"],
-    "branding_settings_path": "./branding-setting.json",
-    "branding_assets_path": "./branding-assets.json",
+    "branding_settings_path": "branding-setting.json",
+    "branding_assets_path": "branding-assets.json",
     "access_token_validity": { "value": 60, "unit": "minutes" },
     "id_token_validity": { "value": 60, "unit": "minutes" },
     "refresh_token_validity": { "value": 30, "unit": "days" }
   }
-
 ]
