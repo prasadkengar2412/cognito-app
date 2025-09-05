@@ -132,11 +132,3 @@ resource "aws_secretsmanager_secret_version" "app_secret_version" {
     clientsecret = aws_cognito_user_pool_client.app_client.client_secret
   })
 }
-
-# Debug output for branding files used
-output "branding_files_used" {
-  value = local.apply_branding ? {
-    settings = var.branding_settings_path
-    assets   = var.branding_assets_path
-  } : "No branding files applied for ${var.application_name}"
-}
