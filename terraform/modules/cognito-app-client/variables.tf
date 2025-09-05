@@ -1,51 +1,91 @@
-variable "region" {
-  type = string
-}
 variable "application_name" {
-  type = string
+  description = "Name of the application"
+  type        = string
 }
-variable "env" {
-  type = string
-}
+
 variable "client_type" {
-  type = string
+  description = "Type of the client (e.g., internal, external)"
+  type        = string
 }
+
+variable "env" {
+  description = "Environment (dev, stg, prod)"
+  type        = string
+}
+
+variable "region" {
+  description = "AWS region"
+  type        = string
+}
+
 variable "redirect_urls" {
-  type = list(string)
+  description = "List of callback URLs"
+  type        = list(string)
+  default     = []
 }
+
 variable "logout_urls" {
-  type = list(string)
+  description = "List of logout URLs"
+  type        = list(string)
+  default     = []
 }
+
 variable "scopes" {
-  type = list(string)
+  description = "List of OAuth scopes"
+  type        = list(string)
+  default     = []
 }
+
 variable "custom_scopes" {
-  type    = list(string)
-  default = []
+  description = "List of custom OAuth scopes"
+  type        = list(string)
+  default     = []
 }
-variable "branding_settings_path" {
-  type    = string
-  default = ""
+
+variable "resource_server_name" {
+  description = "Name of the Cognito resource server (required if custom_scopes is non-empty)"
+  type        = string
+  default     = null
 }
-variable "branding_assets_path" {
-  type    = string
-  default = ""
+
+variable "resource_server_identifier" {
+  description = "Identifier for the Cognito resource server (required if custom_scopes is non-empty)"
+  type        = string
+  default     = null
 }
+
 variable "access_token_validity" {
+  description = "Access token validity duration and unit"
   type = object({
     value = number
     unit  = string
   })
+  default = {
+    value = 60
+    unit  = "minutes"
+  }
 }
+
 variable "id_token_validity" {
+  description = "ID token validity duration and unit"
   type = object({
     value = number
     unit  = string
   })
+  default = {
+    value = 60
+    unit  = "minutes"
+  }
 }
+
 variable "refresh_token_validity" {
+  description = "Refresh token validity duration and unit"
   type = object({
     value = number
     unit  = string
   })
+  default = {
+    value = 30
+    unit  = "days"
+  }
 }
