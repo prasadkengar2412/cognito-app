@@ -1,79 +1,63 @@
-variable "application_name" {
-  description = "Name of the application"
-  type        = string
-}
-
-variable "client_type" {
-  description = "Type of the client (e.g., internal, external)"
-  type        = string
-}
-
-variable "env" {
-  description = "Environment (dev, stg, prod)"
-  type        = string
-}
-
 variable "region" {
-  description = "AWS region"
-  type        = string
+  type = string
 }
-
+variable "application_name" {
+  type = string
+}
+variable "env" {
+  type = string
+}
+variable "client_type" {
+  type = string
+}
 variable "redirect_urls" {
-  description = "List of callback URLs"
-  type        = list(string)
-  default     = []
+  type = list(string)
 }
-
 variable "logout_urls" {
-  description = "List of logout URLs"
-  type        = list(string)
-  default     = []
+  type = list(string)
 }
-
 variable "scopes" {
-  description = "List of OAuth scopes"
-  type        = list(string)
-  default     = []
+  type = list(string)
 }
-
 variable "custom_scopes" {
-  description = "List of custom OAuth scopes"
-  type        = list(string)
-  default     = []
+  type    = list(string)
+  default = []
 }
 
+# NEW optional inputs for resource server override
+variable "resource_server_identifier" {
+  type    = string
+  default = ""
+}
+
+variable "resource_server_name" {
+  type    = string
+  default = ""
+}
+
+variable "branding_settings_path" {
+  type    = string
+  default = ""
+}
+variable "branding_assets_path" {
+  type    = string
+  default = ""
+}
 variable "access_token_validity" {
-  description = "Access token validity duration and unit"
   type = object({
     value = number
     unit  = string
   })
-  default = {
-    value = 60
-    unit  = "minutes"
-  }
 }
-
 variable "id_token_validity" {
-  description = "ID token validity duration and unit"
   type = object({
     value = number
     unit  = string
   })
-  default = {
-    value = 60
-    unit  = "minutes"
-  }
 }
-
 variable "refresh_token_validity" {
-  description = "Refresh token validity duration and unit"
   type = object({
     value = number
     unit  = string
   })
-  default = {
-    value = 30
-    unit  = "days"
-  }
 }
