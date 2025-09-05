@@ -37,7 +37,7 @@ jobs:
         case $BRANCH in
           develop) echo "TF_VAR_env=dev" >> $GITHUB_ENV ;;
           staging) echo "TF_VAR_env=stg" >> $GITHUB_ENV ;;
-          main) echo "TF_VAR_env=prod" >> $GITHUB_ENV ;;
+          production) echo "TF_VAR_env=prod" >> $GITHUB_ENV ;;
           *) echo "Unsupported branch: $BRANCH"; exit 1 ;;
         esac
         echo "Environment set to: $TF_VAR_env"
