@@ -25,10 +25,10 @@
     "refresh_token_validity": { "value": 15, "unit": "days" }
   },
   {
-   "name": "app3",
+    "name": "app3",
     "client_type": "internal",
     "redirect_urls": ["https://app5.com/callback"],
     "logout_urls": ["https://app5.com/logout"],
-    "scopes": ["openid", "email"],
+    "scopes": ["openid", "email"]
   }
 ]
