@@ -43,13 +43,13 @@ variable "custom_scopes" {
 }
 
 variable "resource_server_name" {
-  description = "Name of the Cognito resource server (required if custom_scopes is non-empty)"
+  description = "Name of the Cognito resource server (optional, defaults to <application_name>_api)"
   type        = string
   default     = null
 }
 
 variable "resource_server_identifier" {
-  description = "Identifier for the Cognito resource server (required if custom_scopes is non-empty)"
+  description = "Identifier for the Cognito resource server (optional, defaults to <application_name>.api)"
   type        = string
   default     = null
 }
