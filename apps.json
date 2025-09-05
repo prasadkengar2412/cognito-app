@@ -1,5 +1,14 @@
 [
-
+    {
+    "name": "app3",
+    "client_type": "internal",
+    "redirect_urls": ["https://app3.com/callback"],
+    "logout_urls": ["https://app3.com/logout"],
+    "scopes": ["openid", "email"],
+    "custom_scopes": ["app3.api/read", "app3.api/write"],
+    "branding_settings_path": "branding-settings/app3-branding-setting.json",
+    "branding_assets_path": "branding-assets/app3-branding-assets.json"
+  },
   {
     "name": "app4",
     "client_type": "external",
