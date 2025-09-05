@@ -42,18 +42,6 @@ variable "custom_scopes" {
   default     = []
 }
 
-variable "resource_server_name" {
-  description = "Name of the Cognito resource server (optional, defaults to <application_name>_api)"
-  type        = string
-  default     = null
-}
-
-variable "resource_server_identifier" {
-  description = "Identifier for the Cognito resource server (optional, defaults to <application_name>.api)"
-  type        = string
-  default     = null
-}
-
 variable "access_token_validity" {
   description = "Access token validity duration and unit"
   type = object({
