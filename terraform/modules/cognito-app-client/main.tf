@@ -31,7 +31,7 @@ resource "aws_cognito_user_pool_client" "app_client" {
   allowed_oauth_flows_user_pool_client = true
   allowed_oauth_scopes                 = concat(var.scopes, var.custom_scopes)
   supported_identity_providers         = ["COGNITO"]
-  explicit_auth_flows                  = ["ALLOW_REFRESH_TOKEN_AUTH", "ALLOW_USER_AUTH", "ALLOW_USER_SRP_AUTH"]
+  explicit_auth_flows                  = ["ALLOW_REFRESH_TOKEN_AUTH", "ALLOW_USER_PASSWORD_AUTH", "ALLOW_USER_SRP_AUTH"]
   access_token_validity        = var.access_token_validity.value
   id_token_validity            = var.id_token_validity.value
   refresh_token_validity       = var.refresh_token_validity.value
@@ -83,40 +83,76 @@ resource "null_resource" "managed_branding" {
       REGION="${var.region}"
       SETTINGS_FILE="${var.branding_settings_path}"
       ASSETS_FILE="${var.branding_assets_path}"
+      ERROR_LOG="error-${var.application_name}.log"
 
-      echo "ℹ️ Applying branding for client $CLIENT_ID using settings: $SETTINGS_FILE and assets: $ASSETS_FILE"
+      echo "ℹ️ Applying branding for app ${var.application_name} (Client ID: $CLIENT_ID) in User Pool $POOL_ID"
+      echo "ℹ️ Settings file: $SETTINGS_FILE"
+      echo "ℹ️ Assets file: $ASSETS_FILE"
+
+      # Validate JSON files
+      if ! jq . "$SETTINGS_FILE" >/dev/null 2>>"$ERROR_LOG"; then
+        echo "❌ Error: Invalid JSON in settings file $SETTINGS_FILE" >>"$ERROR_LOG"
+        exit 1
+      fi
+      if ! jq . "$ASSETS_FILE" >/dev/null 2>>"$ERROR_LOG"; then
+        echo "❌ Error: Invalid JSON in assets file $ASSETS_FILE" >>"$ERROR_LOG"
+        exit 1
+      fi
+
+      # Check file sizes (2 MB limit = 2097152 bytes)
+      SETTINGS_SIZE=$(stat -f %z "$SETTINGS_FILE" 2>>"$ERROR_LOG" || stat -c %s "$SETTINGS_FILE" 2>>"$ERROR_LOG")
+      ASSETS_SIZE=$(stat -f %z "$ASSETS_FILE" 2>>"$ERROR_LOG" || stat -c %s "$ASSETS_FILE" 2>>"$ERROR_LOG")
+      if [ "$SETTINGS_SIZE" -gt 2097152 ] || [ "$ASSETS_SIZE" -gt 2097152 ]; then
+        echo "❌ Error: File size exceeds 2 MB limit (Settings: $SETTINGS_SIZE bytes, Assets: $ASSETS_SIZE bytes)" >>"$ERROR_LOG"
+        exit 1
+      fi
+
+      # Attempt to describe existing branding
       if BRANDING_JSON=$(aws cognito-idp describe-managed-login-branding-by-client \
         --region "$REGION" \
         --user-pool-id "$POOL_ID" \
-        --client-id "$CLIENT_ID" 2>error.log); then
+        --client-id "$CLIENT_ID" 2>>"$ERROR_LOG"); then
           
-          BRANDING_ID=$(echo "$BRANDING_JSON" | jq -r '.ManagedLoginBranding.ManagedLoginBrandingId')
+          BRANDING_ID=$(echo "$BRANDING_JSON" | jq -r '.ManagedLoginBranding.ManagedLoginBrandingId' 2>>"$ERROR_LOG")
+          if [ -z "$BRANDING_ID" ] || [ "$BRANDING_ID" = "null" ]; then
+            echo "❌ Error: Failed to retrieve ManagedLoginBrandingId for client $CLIENT_ID" >>"$ERROR_LOG"
+            exit 1
+          fi
           echo "ℹ️ Branding exists (ID: $BRANDING_ID), updating..."
           
-          aws cognito-idp update-managed-login-branding \
+          if aws cognito-idp update-managed-login-branding \
             --region "$REGION" \
             --user-pool-id "$POOL_ID" \
             --managed-login-branding-id "$BRANDING_ID" \
             --settings "file://$SETTINGS_FILE" \
-            --assets "file://$ASSETS_FILE" 2>>error.log
-          
-          echo "✅ Branding updated successfully"
+            --assets "file://$ASSETS_FILE" 2>>"$ERROR_LOG"; then
+            echo "✅ Branding updated successfully for app ${var.application_name}"
+          else
+            echo "❌ Error: Failed to update branding for client $CLIENT_ID" >>"$ERROR_LOG"
+            exit 1
+          fi
       else
           echo "ℹ️ Branding not found, creating..."
-          aws cognito-idp create-managed-login-branding \
+          if aws cognito-idp create-managed-login-branding \
             --region "$REGION" \
             --user-pool-id "$POOL_ID" \
             --client-id "$CLIENT_ID" \
             --settings "file://$SETTINGS_FILE" \
-            --assets "file://$ASSETS_FILE" 2>>error.log
-          
-          echo "✅ Branding created successfully"
+            --assets "file://$ASSETS_FILE" 2>>"$ERROR_LOG"; then
+            echo "✅ Branding created successfully for app ${var.application_name}"
+          else
+            echo "❌ Error: Failed to create branding for client $CLIENT_ID" >>"$ERROR_LOG"
+            exit 1
+          fi
       fi
-      cat error.log
+      cat "$ERROR_LOG"
     EOT
   }
 
-  depends_on = [aws_cognito_user_pool_client.app_client]
+  depends_on = [
+    aws_cognito_user_pool_client.app_client,
+    null_resource.branding_version
+  ]
 }
 
 # Store in Secrets Manager
