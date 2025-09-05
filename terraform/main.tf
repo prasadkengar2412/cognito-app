@@ -32,8 +32,8 @@ module "app_client" {
   scopes                 = each.value.scopes
   custom_scopes          = lookup(each.value, "custom_scopes", [])
 
-  branding_settings_path = lookup(each.value, "branding_settings_path", "") != "" ? "${path.root}/../${each.value.branding_settings_path}" : ""
-  branding_assets_path   = lookup(each.value, "branding_assets_path", "") != "" ? "${path.root}/../${each.value.branding_assets_path}" : ""
+  branding_settings_path = lookup(each.value, "branding_settings_path", "") != "" ? "${path.root}/../${branding_settings_path}" : ""
+  branding_assets_path   = lookup(each.value, "branding_assets_path", "") != "" ? "${path.root}/../${branding_assets_path}" : ""
   access_token_validity  = {
     value = try(each.value.access_token_validity.value, 60)
     unit  = try(each.value.access_token_validity.unit, "minutes")
