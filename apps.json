@@ -14,7 +14,10 @@
     "logout_urls": ["https://app4.com/logout"],
     "scopes": ["openid","email"],
     "branding_settings_path": "./branding-setting.json",
-    "branding_assets_path": "./branding-assets.json"
+    "branding_assets_path": "./branding-assets.json",
+    "access_token_validity": 60,
+    "id_token_validity": 60,
+    "refresh_token_validity": 30
   },
   {
     "name": "app5",
@@ -22,7 +25,10 @@
     "logout_urls": ["https://app5.com/logout"],
     "scopes": ["openid","email"],
     "branding_settings_path": "./branding-setting.json",
-    "branding_assets_path": "./branding-assets.json"
+    "branding_assets_path": "./branding-assets.json",
+    "access_token_validity": 60,
+    "id_token_validity": 60,
+    "refresh_token_validity": 30
   },
     {
     "name": "app6",
