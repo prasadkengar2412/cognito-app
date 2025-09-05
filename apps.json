@@ -1,13 +1,21 @@
 [
 
+{
+    "name": "app3",
+    "client_type": "internal",
+    "redirect_urls": ["https://app3.com/callback"],
+    "logout_urls": ["https://app3.com/logout"],
+    "scopes": ["openid", "email"],
+    "custom_scopes": ["app3.custom.api/read", "app3.custom.api/write"],
+    "resource_server_name": "app3_custom_api",
+    "resource_server_identifier": "app3.custom.api"
+  },
   {
     "name": "app4",
     "client_type": "external",
     "redirect_urls": ["https://app4.com/callback"],
     "logout_urls": ["https://app4.com/logout"],
     "scopes": ["openid", "email"],
-    "branding_settings_path": "branding-settings/app4-branding-setting.json",
-    "branding_assets_path": "branding-assets/app4-branding-assets.json",
     "access_token_validity": { "value": 60, "unit": "minutes" },
     "id_token_validity": { "value": 60, "unit": "minutes" },
     "refresh_token_validity": { "value": 30, "unit": "days" }
