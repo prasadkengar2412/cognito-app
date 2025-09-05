@@ -15,9 +15,9 @@
     "scopes": ["openid","email"],
     "branding_settings_path": "./branding-setting.json",
     "branding_assets_path": "./branding-assets.json",
-    "access_token_validity": 60,
-    "id_token_validity": 60,
-    "refresh_token_validity": 30
+    "access_token_validity": { "value": 60, "unit": "minutes" },
+    "id_token_validity": { "value": 60, "unit": "minutes" },
+    "refresh_token_validity": { "value": 30, "unit": "days" }
   },
   {
     "name": "app5",
@@ -26,9 +26,9 @@
     "scopes": ["openid","email"],
     "branding_settings_path": "./branding-setting.json",
     "branding_assets_path": "./branding-assets.json",
-    "access_token_validity": 60,
-    "id_token_validity": 60,
-    "refresh_token_validity": 30
+    "access_token_validity": { "value": 60, "unit": "minutes" },
+    "id_token_validity": { "value": 60, "unit": "minutes" },
+    "refresh_token_validity": { "value": 30, "unit": "days" }
   },
     {
     "name": "app6",
@@ -37,7 +37,10 @@
     "scopes": ["openid","email"],
     "custom_scopes": ["app6.api/read", "app6.api/write"],
     "branding_settings_path": "./branding-setting.json",
-    "branding_assets_path": "./branding-assets.json"
+    "branding_assets_path": "./branding-assets.json",
+    "access_token_validity": { "value": 60, "unit": "minutes" },
+    "id_token_validity": { "value": 60, "unit": "minutes" },
+    "refresh_token_validity": { "value": 30, "unit": "days" }
   }
 
 ]
