@@ -20,8 +20,6 @@ module "app_client" {
   logout_urls      = each.value.logout_urls
   scopes           = each.value.scopes
   custom_scopes    = lookup(each.value, "custom_scopes", [])
-  resource_server_name = lookup(each.value, "resource_server_name", null)
-  resource_server_identifier = lookup(each.value, "resource_server_identifier", null)
   access_token_validity = lookup(each.value, "access_token_validity", { value = 60, unit = "minutes" })
   id_token_validity     = lookup(each.value, "id_token_validity", { value = 60, unit = "minutes" })
   refresh_token_validity = lookup(each.value, "refresh_token_validity", { value = 30, unit = "days" })
