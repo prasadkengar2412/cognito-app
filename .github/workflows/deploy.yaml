@@ -1,12 +1,11 @@
 name: Terraform Deploy
 
 on:
-  workflow_dispatch:
-    inputs:
-      app_name:
-        description: 'App name to deploy (must exist in apps.json)'
-        required: true
-        type: string
+  push:
+    branches:
+      - develop
+      - staging
+      - main
 
 jobs:
   terraform:
@@ -23,8 +22,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-      with:
-        ref: ${{ github.event.inputs.ref || github.ref }}
 
     - name: Upgrade AWS CLI v2
       run: |
@@ -49,21 +46,11 @@ jobs:
       with:
         terraform_version: 1.5.0
 
-    - name: Validate App Name from apps.json
-      working-directory: .
-      run: |
-        APP_NAME="${{ github.event.inputs.app_name }}"
-        if ! jq -e ".[] | select(.name == \"$APP_NAME\")" apps.json > /dev/null; then
-          echo "❌ Error: App '$APP_NAME' not found in apps.json"
-          exit 1
-        fi
-        echo "✅ App '$APP_NAME' found in apps.json"
-
     - name: Terraform Init
       run: |
         terraform init \
           -backend-config="bucket=terraform-state-test-cognito" \
-          -backend-config="key=cognito-app-clients/$TF_VAR_env/${{ github.event.inputs.app_name }}/terraform.tfstate" \
+          -backend-config="key=cognito-app-clients/$TF_VAR_env/terraform.tfstate" \
           -backend-config="region=$TF_VAR_region"
 
     - name: Terraform Plan
@@ -71,7 +58,6 @@ jobs:
         terraform plan \
           -var="env=$TF_VAR_env" \
           -var="region=$TF_VAR_region" \
-          -var="app_name=${{ github.event.inputs.app_name }}" \
           -out=plan.tfout
 
     - name: Terraform Apply
