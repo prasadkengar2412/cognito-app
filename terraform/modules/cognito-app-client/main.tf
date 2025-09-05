@@ -31,7 +31,7 @@ resource "aws_cognito_user_pool_client" "app_client" {
   allowed_oauth_flows_user_pool_client = true
   allowed_oauth_scopes                 = concat(var.scopes, var.custom_scopes)
   supported_identity_providers         = ["COGNITO"]
-  explicit_auth_flows                  = ["ALLOW_REFRESH_TOKEN_AUTH", "ALLOW_USER_AUTH", "ALLOW_USER_SRP_AUTH"]
+  explicit_auth_flows                  = ["ALLOW_REFRESH_TOKEN_AUTH", "ALLOW_USER_PASSWORD_AUTH", "ALLOW_USER_SRP_AUTH"]
   access_token_validity        = var.access_token_validity.value
   id_token_validity            = var.id_token_validity.value
   refresh_token_validity       = var.refresh_token_validity.value
@@ -46,19 +46,19 @@ resource "aws_cognito_user_pool_client" "app_client" {
   ]
 }
 
-# Read Branding Files only if paths are provided and files exist
+# Read Branding Files only if both exist
 locals {
-  apply_branding = var.branding_settings_path != "" && var.branding_assets_path != "" ? fileexists(var.branding_settings_path) && fileexists(var.branding_assets_path) : false
+  apply_branding = fileexists("${path.module}/../../branding-settings/branding-settings.json") && fileexists("${path.module}/../../branding-assets/branding-assets.json")
 }
 
 data "local_file" "branding_settings" {
   count    = local.apply_branding ? 1 : 0
-  filename = var.branding_settings_path
+  filename = "${path.module}/../../branding-settings/branding-settings.json"
 }
 
 data "local_file" "branding_assets" {
   count    = local.apply_branding ? 1 : 0
-  filename = var.branding_assets_path
+  filename = "${path.module}/../../branding-assets/branding-assets.json"
 }
 
 # Ensure Terraform re-runs branding if file content changes
@@ -77,7 +77,6 @@ resource "null_resource" "managed_branding" {
     branding_settings_hash = local.apply_branding ? sha1(data.local_file.branding_settings[0].content) : ""
     branding_assets_hash   = local.apply_branding ? sha1(data.local_file.branding_assets[0].content) : ""
   }
-
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
     command = <<EOT
@@ -86,8 +85,8 @@ resource "null_resource" "managed_branding" {
       POOL_ID="${data.aws_ssm_parameter.user_pool_id.value}"
       CLIENT_ID="${aws_cognito_user_pool_client.app_client.id}"
       REGION="${var.region}"
-      SETTINGS_FILE="${var.branding_settings_path}"
-      ASSETS_FILE="${var.branding_assets_path}"
+      SETTINGS_FILE="${path.module}/../../branding-settings/branding-settings.json"
+      ASSETS_FILE="${path.module}/../../branding-assets/branding-assets.json"
       ERROR_LOG="error-${var.application_name}.log"
 
       echo "ℹ️ Applying branding for app ${var.application_name} (Client ID: $CLIENT_ID) in User Pool $POOL_ID"
@@ -96,7 +95,6 @@ resource "null_resource" "managed_branding" {
       echo "ℹ️ AWS CLI version: $(aws --version 2>>"$ERROR_LOG")"
       echo "ℹ️ jq version: $(jq --version 2>>"$ERROR_LOG")"
       echo "ℹ️ Current directory: $(pwd) 2>>"$ERROR_LOG""
-
 
       # Validate JSON files
       if ! jq . "$SETTINGS_FILE" >/dev/null 2>>"$ERROR_LOG"; then
