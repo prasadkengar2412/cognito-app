@@ -1,8 +1,8 @@
 [
   {
-    "identifier": "app4.api",
-    "name": "app4",
-    "scopes": ["app4.api/read","app4.api/write"]
+    "identifier": "app5.api",
+    "name": "app5",
+    "scopes": ["app5.api/read","app5.api/write"]
   }
   
 ]
