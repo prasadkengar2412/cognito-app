@@ -1,12 +1,13 @@
-variable "env" {
-  description = "Environment (dev, stg, prod)"
-  type        = string
+provider "aws" {
+  region = var.region
 }
 
-variable "region" {
-  description = "AWS region"
-  type        = string
+terraform {
+  backend "s3" {
+    bucket = "terraform-state-test-cognito"
+  }
 }
+
 
 module "app_client" {
   for_each = { for app in jsondecode(file("${path.module}/apps.json")) : app.name => app }
