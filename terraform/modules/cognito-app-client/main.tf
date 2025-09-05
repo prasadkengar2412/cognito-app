@@ -32,14 +32,14 @@ resource "aws_cognito_user_pool_client" "app_client" {
   allowed_oauth_scopes                 = concat(var.scopes, var.custom_scopes)
   supported_identity_providers         = ["COGNITO"]
   explicit_auth_flows                  = ["ALLOW_REFRESH_TOKEN_AUTH","ALLOW_USER_PASSWORD_AUTH", "ALLOW_USER_SRP_AUTH"]
-  access_token_validity        = local.selected.access_token_validity.value
-  access_token_validity_units  = local.selected.access_token_validity.unit
+  access_token_validity        = try(local.selected.access_token_validity.value, 60)
+  access_token_validity_units  = try(local.selected.access_token_validity.unit, "minutes")
 
-  id_token_validity            = local.selected.id_token_validity.value
-  id_token_validity_units      = local.selected.id_token_validity.unit
+  id_token_validity            = try(local.selected.id_token_validity.value, 60)
+  id_token_validity_units      = try(local.selected.id_token_validity.unit, "minutes")
 
-  refresh_token_validity       = local.selected.refresh_token_validity.value
-  refresh_token_validity_units = local.selected.refresh_token_validity.unit
+  refresh_token_validity       = try(local.selected.refresh_token_validity.value, 30)
+  refresh_token_validity_units = try(local.selected.refresh_token_validity.unit, "days")
   
   depends_on = [
     aws_cognito_resource_server.app_resource_server
