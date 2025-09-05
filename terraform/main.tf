@@ -31,6 +31,7 @@ module "app_client" {
   logout_urls            = each.value.logout_urls
   scopes                 = each.value.scopes
   custom_scopes          = lookup(each.value, "custom_scopes", [])
+
   branding_settings_path = lookup(each.value, "branding_settings_path", "") != "" ? "${path.root}/../${each.value.branding_settings_path}" : ""
   branding_assets_path   = lookup(each.value, "branding_assets_path", "") != "" ? "${path.root}/../${each.value.branding_assets_path}" : ""
   access_token_validity  = {
@@ -45,4 +46,5 @@ module "app_client" {
     value = try(each.value.refresh_token_validity.value, 30)
     unit  = try(each.value.refresh_token_validity.unit, "days")
   }
+
 }

@@ -77,6 +77,7 @@ resource "null_resource" "managed_branding" {
     branding_settings_hash = local.apply_branding ? sha1(data.local_file.branding_settings[0].content) : ""
     branding_assets_hash   = local.apply_branding ? sha1(data.local_file.branding_assets[0].content) : ""
   }
+
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
     command = <<EOT
@@ -95,6 +96,7 @@ resource "null_resource" "managed_branding" {
       echo "ℹ️ AWS CLI version: $(aws --version 2>>"$ERROR_LOG")"
       echo "ℹ️ jq version: $(jq --version 2>>"$ERROR_LOG")"
       echo "ℹ️ Current directory: $(pwd) 2>>"$ERROR_LOG""
+
 
       # Validate JSON files
       if ! jq . "$SETTINGS_FILE" >/dev/null 2>>"$ERROR_LOG"; then
