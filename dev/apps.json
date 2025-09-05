@@ -2,14 +2,14 @@
 [
  
   {
-    "name": "app4",
+    "name": "app5",
     "client_type": "external",
     "redirect_urls": ["https://app4.com/callback"],
     "logout_urls": ["https://app4.com/logout"],
     "scopes": ["openid", "email"],
     "branding_settings_path": "branding-settings/branding-setting.json",
     "branding_assets_path": "branding-assets/branding-assets.json",
-    "custom_scopes": ["app4.api/read"],
+    "custom_scopes": ["app5.api/read"],
     "access_token_validity": { "value": 60, "unit": "minutes" },
     "id_token_validity": { "value": 60, "unit": "minutes" },
     "refresh_token_validity": { "value": 30, "unit": "days" }
