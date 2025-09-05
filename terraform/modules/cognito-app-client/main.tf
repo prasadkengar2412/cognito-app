@@ -20,8 +20,7 @@ resource "aws_cognito_resource_server" "app_resource_server" {
   dynamic "scope" {
     for_each = var.custom_scopes
     content {
-      # custom_scopes are expected to be full scope strings like "myapp.api/read" OR "read"
-      # We remove potential prefix "<identifier>/" if present, otherwise use scope as-is.
+      # If scope looks like "<identifier>/read", strip prefix. Otherwise, keep as-is.
       scope_name        = replace(scope.value, "${local.effective_resource_server_identifier}/", "")
       scope_description = "Scope for ${var.application_name} ${replace(scope.value, "${local.effective_resource_server_identifier}/", "")}"
     }
@@ -40,18 +39,20 @@ resource "aws_cognito_user_pool_client" "app_client" {
   allowed_oauth_scopes                 = concat(var.scopes, var.custom_scopes)
   supported_identity_providers         = ["COGNITO"]
   explicit_auth_flows                  = ["ALLOW_REFRESH_TOKEN_AUTH", "ALLOW_USER_AUTH", "ALLOW_USER_SRP_AUTH"]
+
   access_token_validity        = var.access_token_validity.value
   id_token_validity            = var.id_token_validity.value
   refresh_token_validity       = var.refresh_token_validity.value
+
   token_validity_units {
     access_token  = var.access_token_validity.unit
     id_token      = var.id_token_validity.unit
     refresh_token = var.refresh_token_validity.unit
   }
 
-  # If we created a resource server above, ensure it exists before the client
+  # ✅ FIX: no ternary here, just depend directly (safe even if for_each is empty)
   depends_on = [
-    length(var.custom_scopes) > 0 ? aws_cognito_resource_server.app_resource_server : null
+    aws_cognito_resource_server.app_resource_server
   ]
 }
 
@@ -105,7 +106,6 @@ resource "null_resource" "managed_branding" {
       echo "ℹ️ AWS CLI version: $(aws --version 2>>"$ERROR_LOG")"
       echo "ℹ️ jq version: $(jq --version 2>>"$ERROR_LOG")"
       echo "ℹ️ Current directory: $(pwd) 2>>"$ERROR_LOG""
-
 
       # Validate JSON files
       if ! jq . "$SETTINGS_FILE" >/dev/null 2>>"$ERROR_LOG"; then
