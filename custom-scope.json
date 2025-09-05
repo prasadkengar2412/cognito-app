@@ -1,0 +1,12 @@
+[
+  {
+    "identifier": "ulng-api",
+    "name": "ULNG API",
+    "scopes": ["changepassword", "changelogin", "getemail", "verifyemail"]
+  },
+  {
+    "identifier": "analytics-api",
+    "name": "Analytics API",
+    "scopes": ["readmetrics", "writemetrics"]
+  }
+]
