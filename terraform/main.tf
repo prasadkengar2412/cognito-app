@@ -9,7 +9,7 @@ terraform {
 }
 
 data "local_file" "apps_config" {
-  filename = "${path.root}/${var.env}/apps.json"
+  filename = "${path.root}/../${var.env}/apps.json"
 }
 
 data "local_file" "custom_scopes_config" {
