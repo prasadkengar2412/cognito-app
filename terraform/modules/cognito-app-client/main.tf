@@ -46,7 +46,7 @@ resource "aws_cognito_user_pool_client" "app_client" {
   refresh_token_validity {
     value = var.refresh_token_validity  # e.g., 30
     unit  = "days"
-
+  }
   depends_on = [
     aws_cognito_resource_server.app_resource_server
   ]
