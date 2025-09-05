@@ -46,21 +46,3 @@ module "app_client" {
     unit  = try(each.value.refresh_token_validity.unit, "days")
   }
 }
-
-output "client_ids" {
-  value = { for name, mod in module.app_client : name => mod.client_id }
-}
-
-output "secret_arns" {
-  value = { for name, mod in module.app_client : name => mod.secret_arn }
-}
-
-variable "region" {
-  type    = string
-  default = "us-east-1"
-}
-
-variable "env" {
-  type        = string
-  description = "Environment (dev, stg, prod)"
-}
