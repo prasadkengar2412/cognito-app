@@ -1,7 +1,9 @@
-output "client_ids" {
-  value = { for name, mod in module.app_client : name => mod.client_id }
+output "client_id" {
+  description = "The ID of the Cognito app client"
+  value       = aws_cognito_user_pool_client.app_client.id
 }
 
-output "secret_arns" {
-  value = { for name, mod in module.app_client : name => mod.secret_arn }
+output "secret_arn" {
+  description = "The ARN of the Secrets Manager secret for the app client"
+  value       = aws_secretsmanager_secret.app_secret.arn
 }
