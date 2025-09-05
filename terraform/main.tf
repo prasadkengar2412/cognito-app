@@ -8,53 +8,64 @@ terraform {
   }
 }
 
-# Read app configurations from apps.json in the root directory
+# -----------------------------
+# 1️⃣ Load JSON configurations based on environment
+# -----------------------------
 data "local_file" "apps_config" {
-  filename = "${path.root}/../apps.json"
+  filename = "${path.root}/${var.env}/apps.json"
+}
+
+data "local_file" "custom_scopes_config" {
+  filename = "${path.root}/custom-scope.json"
 }
 
 locals {
-  apps = jsondecode(data.local_file.apps_config.content)
+  apps          = jsondecode(data.local_file.apps_config.content)
+  custom_scopes = jsondecode(data.local_file.custom_scopes_config.content)
 }
 
-# Global branding files (same for all apps)
-# These are the files you said you stored:
-# - branding-settings/branding-settings.json
-# - branding-assets/branding-assets.json
-locals {
-  global_branding_settings = "${path.root}/../branding-settings/branding-setting.json"
-  global_branding_assets   = "${path.root}/../branding-assets/branding-assets.json"
+# -----------------------------
+# 2️⃣ Create Resource Servers
+# -----------------------------
+module "resource_servers" {
+  for_each   = { for rs in local.custom_scopes : rs.identifier => rs }
+  source     = "./modules/cognito-resource-server"
+
+  env        = var.env
+  identifier = each.value.identifier
+  name       = each.value.name
+  scopes     = each.value.scopes
 }
 
-# Call module for each app
-module "app_client" {
-  for_each = { for app in local.apps : app.name => app }
+# -----------------------------
+# 3️⃣ Create App Clients
+# -----------------------------
+module "app_clients" {
+  for_each           = { for app in local.apps : app.name => app }
+  source             = "./modules/cognito-app-client"
 
-  source = "./modules/cognito-app-client"
+  region             = var.region
+  env                = var.env
+  application_name   = each.value.name
+  client_type        = lookup(each.value, "client_type", "internal")
+  redirect_urls      = each.value.redirect_urls
+  logout_urls        = each.value.logout_urls
+  scopes             = lookup(each.value, "scopes", [])
 
-  region                 = var.region
-  application_name       = each.value.name
-  env                    = var.env
-  client_type            = lookup(each.value, "client_type", "internal")
-  redirect_urls          = each.value.redirect_urls
-  logout_urls            = each.value.logout_urls
-  scopes                 = each.value.scopes
-  custom_scopes          = lookup(each.value, "custom_scopes", [])
+  # Attach scopes from resource servers if defined
+  custom_scopes = flatten([
+    for rs in lookup(each.value, "resource_servers", []) :
+    module.resource_servers[rs].scopes
+  ])
 
-  # NEW: resource server identifier/name can be provided per-app in apps.json.
-  # If empty, the module will fall back to "<application_name>.api" and "<application_name>_api"
-  resource_server_identifier = lookup(each.value, "resource_server_identifier", "")
-  resource_server_name       = lookup(each.value, "resource_server_name", "")
+  branding_settings_path = "${path.root}/branding-settings/branding-setting.json"
+  branding_assets_path   = "${path.root}/branding-assets/branding-assets.json"
 
-  # Use global branding files for all apps — module will check file existence.
-  branding_settings_path = local.global_branding_settings
-  branding_assets_path   = local.global_branding_assets
-
-  access_token_validity  = {
+  access_token_validity = {
     value = try(each.value.access_token_validity.value, 60)
     unit  = try(each.value.access_token_validity.unit, "minutes")
   }
-  id_token_validity      = {
+  id_token_validity = {
     value = try(each.value.id_token_validity.value, 60)
     unit  = try(each.value.id_token_validity.unit, "minutes")
   }
@@ -62,4 +73,22 @@ module "app_client" {
     value = try(each.value.refresh_token_validity.value, 30)
     unit  = try(each.value.refresh_token_validity.unit, "days")
   }
+}
+
+# -----------------------------
+# 4️⃣ Outputs
+# -----------------------------
+output "client_ids" {
+  value       = { for name, mod in module.app_clients : name => mod.client_id }
+  description = "Map of app names to their Cognito app client IDs"
+}
+
+output "secret_arns" {
+  value       = { for name, mod in module.app_clients : name => mod.secret_arn }
+  description = "Map of app names to their Secrets Manager secret ARNs"
+}
+
+output "branding_files_used" {
+  value       = { for name, mod in module.app_clients : name => mod.branding_files_used }
+  description = "Branding files applied"
 }
