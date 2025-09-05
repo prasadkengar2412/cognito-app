@@ -14,29 +14,4 @@
     "id_token_validity": { "value": 60, "unit": "minutes" },
     "refresh_token_validity": { "value": 30, "unit": "days" }
   },
-
-  {
-    "name": "app5",
-    "client_type": "external",
-    "redirect_urls": ["https://app4.com/callback"],
-    "logout_urls": ["https://app4.com/logout"],
-    "scopes": ["openid", "email"],
-    "branding_settings_path": "branding-settings/branding-setting.json",
-    "branding_assets_path": "branding-assets/branding-assets.json",
-    "access_token_validity": { "value": 60, "unit": "minutes" },
-    "id_token_validity": { "value": 60, "unit": "minutes" },
-    "refresh_token_validity": { "value": 30, "unit": "days" }
-  },
-  {
-    "name": "app7",
-    "client_type": "internal",
-    "redirect_urls": ["https://app5.com/callback"],
-    "logout_urls": ["https://app5.com/logout"],
-    "scopes": ["openid", "email"],
-    "branding_settings_path": "branding-settings/branding-setting.json",
-    "branding_assets_path": "branding-assets/branding-assets.json",
-    "access_token_validity": { "value": 30, "unit": "minutes" },
-    "id_token_validity": { "value": 30, "unit": "minutes" },
-    "refresh_token_validity": { "value": 15, "unit": "days" }
-  }
 ]
