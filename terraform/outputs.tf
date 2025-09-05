@@ -1,14 +1,13 @@
-output "client_ids" {
-  description = "Map of app names to their Cognito app client IDs"
-  value       = { for name, mod in module.app_client : name => mod.client_id }
+output "app_client_ids" {
+  value = { for k, v in module.app_client : k => v.client_id }
 }
 
-output "secret_arns" {
-  description = "Map of app names to their Secrets Manager secret ARNs"
-  value       = { for name, mod in module.app_client : name => mod.secret_arn }
-}
-
-output "branding_files_used" {
-  description = "Branding files used for each app client"
-  value       = { for name, mod in module.app_client : name => mod.branding_files_used }
+output "resource_server_details" {
+  value = {
+    for k, v in module.app_client :
+    k => {
+      name      = try(v.resource_server_name, null)
+      identifier = try(v.resource_server_identifier, null)
+    } if length(v.custom_scopes) > 0
+  }
 }
