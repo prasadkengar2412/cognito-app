@@ -24,10 +24,12 @@ variable "custom_scopes" {
   default = []
 }
 variable "branding_settings_path" {
-  type = string
+  type    = string
+  default = ""
 }
 variable "branding_assets_path" {
-  type = string
+  type    = string
+  default = ""
 }
 variable "access_token_validity" {
   type = object({
