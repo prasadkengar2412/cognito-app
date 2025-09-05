@@ -10,8 +10,6 @@
     "branding_settings_path": "branding-settings/branding-setting.json",
     "branding_assets_path": "branding-assets/branding-assets.json",
     "custom_scopes": ["app4.api/read","app4.api/write"],
-    "resource_server_identifier": "app4.api",
-    "resource_server_name": "app4_api",
     "access_token_validity": { "value": 60, "unit": "minutes" },
     "id_token_validity": { "value": 60, "unit": "minutes" },
     "refresh_token_validity": { "value": 30, "unit": "days" }
