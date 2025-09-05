@@ -3,7 +3,7 @@ name: Terraform Deploy
 on:
   push:
     branches:
-      - develop
+      - develope
       - staging
       - production
 
