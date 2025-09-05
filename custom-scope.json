@@ -2,7 +2,7 @@
   {
     "identifier": "app5.api",
     "name": "app5",
-    "scopes": ["app5.api/read","app5.api/write"]
+    "scopes": ["read","write"]
   }
   
 ]
