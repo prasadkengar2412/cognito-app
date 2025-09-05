@@ -4,18 +4,26 @@ data "aws_ssm_parameter" "user_pool_id" {
   with_decryption = true
 }
 
+# Decide effective resource server identifier and name (use provided or fallback)
+locals {
+  effective_resource_server_identifier = var.resource_server_identifier != "" ? var.resource_server_identifier : "${var.application_name}.api"
+  effective_resource_server_name       = var.resource_server_name != "" ? var.resource_server_name : "${var.application_name}_api"
+}
+
 # Create Resource Server for Custom Scopes (if custom_scopes are provided)
 resource "aws_cognito_resource_server" "app_resource_server" {
-  for_each    = length(var.custom_scopes) > 0 ? { "${var.application_name}" = var.application_name } : {}
+  for_each     = length(var.custom_scopes) > 0 ? { "${var.application_name}" = var.application_name } : {}
   user_pool_id = data.aws_ssm_parameter.user_pool_id.value
-  identifier   = coalesce(var.resource_server_identifier, "${var.application_name}.api")
-  name         = coalesce(var.resource_server_name, "${var.application_name}_api")
+  identifier   = local.effective_resource_server_identifier
+  name         = local.effective_resource_server_name
 
   dynamic "scope" {
     for_each = var.custom_scopes
     content {
-      scope_name        = replace(scope.value, "${var.application_name}.api/", "")
-      scope_description = "Scope for ${var.application_name} ${replace(scope.value, "${var.application_name}.api/", "")}"
+      # custom_scopes are expected to be full scope strings like "myapp.api/read" OR "read"
+      # We remove potential prefix "<identifier>/" if present, otherwise use scope as-is.
+      scope_name        = replace(scope.value, "${local.effective_resource_server_identifier}/", "")
+      scope_description = "Scope for ${var.application_name} ${replace(scope.value, "${local.effective_resource_server_identifier}/", "")}"
     }
   }
 }
@@ -31,7 +39,7 @@ resource "aws_cognito_user_pool_client" "app_client" {
   allowed_oauth_flows_user_pool_client = true
   allowed_oauth_scopes                 = concat(var.scopes, var.custom_scopes)
   supported_identity_providers         = ["COGNITO"]
-  explicit_auth_flows                  = ["ALLOW_REFRESH_TOKEN_AUTH", "ALLOW_USER_PASSWORD_AUTH", "ALLOW_USER_SRP_AUTH"]
+  explicit_auth_flows                  = ["ALLOW_REFRESH_TOKEN_AUTH", "ALLOW_USER_AUTH", "ALLOW_USER_SRP_AUTH"]
   access_token_validity        = var.access_token_validity.value
   id_token_validity            = var.id_token_validity.value
   refresh_token_validity       = var.refresh_token_validity.value
@@ -40,25 +48,26 @@ resource "aws_cognito_user_pool_client" "app_client" {
     id_token      = var.id_token_validity.unit
     refresh_token = var.refresh_token_validity.unit
   }
-  
+
+  # If we created a resource server above, ensure it exists before the client
   depends_on = [
-    aws_cognito_resource_server.app_resource_server
+    length(var.custom_scopes) > 0 ? aws_cognito_resource_server.app_resource_server : null
   ]
 }
 
-# Read Branding Files only if both exist
+# Read Branding Files only if paths are provided and files exist
 locals {
-  apply_branding = fileexists("${path.module}/../../branding-settings/branding-settings.json") && fileexists("${path.module}/../../branding-assets/branding-assets.json")
+  apply_branding = var.branding_settings_path != "" && var.branding_assets_path != "" ? fileexists(var.branding_settings_path) && fileexists(var.branding_assets_path) : false
 }
 
 data "local_file" "branding_settings" {
   count    = local.apply_branding ? 1 : 0
-  filename = "${path.module}/../../branding-settings/branding-settings.json"
+  filename = var.branding_settings_path
 }
 
 data "local_file" "branding_assets" {
   count    = local.apply_branding ? 1 : 0
-  filename = "${path.module}/../../branding-assets/branding-assets.json"
+  filename = var.branding_assets_path
 }
 
 # Ensure Terraform re-runs branding if file content changes
@@ -77,6 +86,7 @@ resource "null_resource" "managed_branding" {
     branding_settings_hash = local.apply_branding ? sha1(data.local_file.branding_settings[0].content) : ""
     branding_assets_hash   = local.apply_branding ? sha1(data.local_file.branding_assets[0].content) : ""
   }
+
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
     command = <<EOT
@@ -85,8 +95,8 @@ resource "null_resource" "managed_branding" {
       POOL_ID="${data.aws_ssm_parameter.user_pool_id.value}"
       CLIENT_ID="${aws_cognito_user_pool_client.app_client.id}"
       REGION="${var.region}"
-      SETTINGS_FILE="${path.module}/../../branding-settings/branding-settings.json"
-      ASSETS_FILE="${path.module}/../../branding-assets/branding-assets.json"
+      SETTINGS_FILE="${var.branding_settings_path}"
+      ASSETS_FILE="${var.branding_assets_path}"
       ERROR_LOG="error-${var.application_name}.log"
 
       echo "ℹ️ Applying branding for app ${var.application_name} (Client ID: $CLIENT_ID) in User Pool $POOL_ID"
@@ -95,6 +105,7 @@ resource "null_resource" "managed_branding" {
       echo "ℹ️ AWS CLI version: $(aws --version 2>>"$ERROR_LOG")"
       echo "ℹ️ jq version: $(jq --version 2>>"$ERROR_LOG")"
       echo "ℹ️ Current directory: $(pwd) 2>>"$ERROR_LOG""
+
 
       # Validate JSON files
       if ! jq . "$SETTINGS_FILE" >/dev/null 2>>"$ERROR_LOG"; then
