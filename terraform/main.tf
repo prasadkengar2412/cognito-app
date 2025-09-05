@@ -1,9 +1,19 @@
+provider "aws" {
+  region = var.region
+}
+
+terraform {
+  backend "s3" {
+    bucket = "terraform-state-test-cognito"
+  }
+}
+
 data "local_file" "apps_config" {
   filename = "${path.root}/${var.env}/apps.json"
 }
 
 data "local_file" "custom_scopes_config" {
-  filename = "${path.root}/custom-scope.json"
+  filename = "${path.root}/../custom-scope.json"
 }
 
 locals {
