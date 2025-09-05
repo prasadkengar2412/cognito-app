@@ -31,7 +31,7 @@ resource "aws_cognito_user_pool_client" "app_client" {
   allowed_oauth_flows_user_pool_client = true
   allowed_oauth_scopes                 = concat(var.scopes, var.custom_scopes)
   supported_identity_providers         = ["COGNITO"]
-  explicit_auth_flows                  = ["ALLOW_REFRESH_TOKEN_AUTH", "ALLOW_USER_AUTH", "ALLOW_USER_SRP_AUTH"]
+  explicit_auth_flows                  = ["ALLOW_REFRESH_TOKEN_AUTH", "ALLOW_USER_PASSWORD_AUTH", "ALLOW_USER_SRP_AUTH"]
   access_token_validity        = var.access_token_validity.value
   id_token_validity            = var.id_token_validity.value
   refresh_token_validity       = var.refresh_token_validity.value
@@ -84,11 +84,11 @@ resource "null_resource" "managed_branding" {
       SETTINGS_FILE="${var.branding_settings_path}"
       ASSETS_FILE="${var.branding_assets_path}"
 
-      echo "ℹ️ Checking if branding exists for client $CLIENT_ID..."
+      echo "ℹ️ Applying branding for client $CLIENT_ID using settings: $SETTINGS_FILE and assets: $ASSETS_FILE"
       if BRANDING_JSON=$(aws cognito-idp describe-managed-login-branding-by-client \
         --region "$REGION" \
         --user-pool-id "$POOL_ID" \
-        --client-id "$CLIENT_ID" 2>/dev/null); then
+        --client-id "$CLIENT_ID" 2>error.log); then
           
           BRANDING_ID=$(echo "$BRANDING_JSON" | jq -r '.ManagedLoginBranding.ManagedLoginBrandingId')
           echo "ℹ️ Branding exists (ID: $BRANDING_ID), updating..."
@@ -98,10 +98,9 @@ resource "null_resource" "managed_branding" {
             --user-pool-id "$POOL_ID" \
             --managed-login-branding-id "$BRANDING_ID" \
             --settings "file://$SETTINGS_FILE" \
-            --assets "file://$ASSETS_FILE"
+            --assets "file://$ASSETS_FILE" 2>>error.log
           
           echo "✅ Branding updated successfully"
-
       else
           echo "ℹ️ Branding not found, creating..."
           aws cognito-idp create-managed-login-branding \
@@ -109,10 +108,11 @@ resource "null_resource" "managed_branding" {
             --user-pool-id "$POOL_ID" \
             --client-id "$CLIENT_ID" \
             --settings "file://$SETTINGS_FILE" \
-            --assets "file://$ASSETS_FILE"
+            --assets "file://$ASSETS_FILE" 2>>error.log
           
           echo "✅ Branding created successfully"
       fi
+      cat error.log
     EOT
   }
 
@@ -131,4 +131,12 @@ resource "aws_secretsmanager_secret_version" "app_secret_version" {
     clientid     = aws_cognito_user_pool_client.app_client.id
     clientsecret = aws_cognito_user_pool_client.app_client.client_secret
   })
+}
+
+# Debug output for branding files used
+output "branding_files_used" {
+  value = local.apply_branding ? {
+    settings = var.branding_settings_path
+    assets   = var.branding_assets_path
+  } : "No branding files applied for ${var.application_name}"
 }
