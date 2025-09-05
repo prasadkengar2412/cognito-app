@@ -33,9 +33,19 @@ resource "aws_cognito_user_pool_client" "app_client" {
   supported_identity_providers         = ["COGNITO"]
   explicit_auth_flows                  = ["ALLOW_REFRESH_TOKEN_AUTH","ALLOW_USER_PASSWORD_AUTH", "ALLOW_USER_SRP_AUTH"]
 
-  access_token_validity  = var.access_token_validity   # minutes
-  id_token_validity      = var.id_token_validity       # minutes
-  refresh_token_validity = var.refresh_token_validity  # days
+  access_token_validity {
+    value = var.access_token_validity   # e.g., 60
+    unit  = "minutes"
+  }
+
+  id_token_validity {
+    value = var.id_token_validity       # e.g., 60
+    unit  = "minutes"
+  }
+
+  refresh_token_validity {
+    value = var.refresh_token_validity  # e.g., 30
+    unit  = "days"
 
   depends_on = [
     aws_cognito_resource_server.app_resource_server
