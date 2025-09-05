@@ -51,12 +51,7 @@ module "app_clients" {
   redirect_urls      = each.value.redirect_urls
   logout_urls        = each.value.logout_urls
   scopes             = lookup(each.value, "scopes", [])
-
-  # Attach scopes from resource servers if defined
-  custom_scopes = flatten([
-    for rs in lookup(each.value, "resource_servers", []) :
-    module.resource_servers[rs].scopes
-  ])
+  custom_scopes      = lookup(each.value, "custom_scopes", [])
 
   branding_settings_path = "${path.root}/branding-settings/branding-setting.json"
   branding_assets_path   = "${path.root}/branding-assets/branding-assets.json"
@@ -74,6 +69,7 @@ module "app_clients" {
     unit  = try(each.value.refresh_token_validity.unit, "days")
   }
 }
+
 
 # -----------------------------
 # 4️⃣ Outputs
