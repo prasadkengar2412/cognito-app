@@ -5,10 +5,10 @@ data "aws_ssm_parameter" "user_pool_id" {
 }
 
 # Decide effective resource server identifier and name (use provided or fallback)
-locals {
-  effective_resource_server_identifier = var.resource_server_identifier != "" ? var.resource_server_identifier : "${var.application_name}.api"
-  effective_resource_server_name       = var.resource_server_name != "" ? var.resource_server_name : "${var.application_name}_api"
-}
+#locals {
+#  effective_resource_server_identifier = var.resource_server_identifier != "" ? var.resource_server_identifier : "${var.application_name}.api"
+ # effective_resource_server_name       = var.resource_server_name != "" ? var.resource_server_name : "${var.application_name}_api"
+#}
 
 # Create Resource Server for Custom Scopes (if custom_scopes are provided)
 #resource "aws_cognito_resource_server" "app_resource_server" {
@@ -50,10 +50,6 @@ resource "aws_cognito_user_pool_client" "app_client" {
     refresh_token = var.refresh_token_validity.unit
   }
 
-  # ✅ FIX: no ternary here, just depend directly (safe even if for_each is empty)
-  depends_on = [
-    aws_cognito_resource_server.app_resource_server
-  ]
 }
 
 # Read Branding Files only if paths are provided and files exist
