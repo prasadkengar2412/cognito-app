@@ -10,35 +10,49 @@ terraform {
 
 # Read app configurations from apps.json
 data "local_file" "apps_config" {
-  filename = "${path.root}/../apps.json"
+  filename = "${path.module}/apps.json"
 }
 
 locals {
-  apps     = jsondecode(data.local_file.apps_config.content)
-  selected = [for app in local.apps : app if app.name == var.app_name][0]
+  apps = jsondecode(data.local_file.apps_config.content)
 }
 
-# Call module only for the selected app
+# Call module for each app
 module "app_client" {
+  for_each = { for app in local.apps : app.name => app }
+
   source = "./modules/cognito-app-client"
 
   region                 = var.region
-  application_name       = local.selected.name
+  application_name       = each.value.name
   env                    = var.env
-  redirect_urls          = local.selected.redirect_urls
-  logout_urls            = local.selected.logout_urls
-  scopes                 = local.selected.scopes
-  custom_scopes          = lookup(local.selected, "custom_scopes", [])
-  branding_settings_path = "${path.root}/../${lookup(local.selected, "branding_settings_path", "branding-setting.css")}"
-  branding_assets_path   = "${path.root}/../${lookup(local.selected, "branding_assets_path", "branding-assets.json")}"
-  access_token_validity        = try(local.selected.access_token_validity.value, 60)
-  access_token_validity_units  = try(local.selected.access_token_validity.unit, "minutes")
+  client_type            = lookup(each.value, "client_type", "internal")
+  redirect_urls          = each.value.redirect_urls
+  logout_urls            = each.value.logout_urls
+  scopes                 = each.value.scopes
+  custom_scopes          = lookup(each.value, "custom_scopes", [])
+  branding_settings_path = "${path.module}/${lookup(each.value, "branding_settings_path", "branding-setting.json")}"
+  branding_assets_path   = "${path.module}/${lookup(each.value, "branding_assets_path", "branding-assets.json")}"
+  access_token_validity  = {
+    value = try(each.value.access_token_validity.value, 60)
+    unit  = try(each.value.access_token_validity.unit, "minutes")
+  }
+  id_token_validity      = {
+    value = try(each.value.id_token_validity.value, 60)
+    unit  = try(each.value.id_token_validity.unit, "minutes")
+  }
+  refresh_token_validity = {
+    value = try(each.value.refresh_token_validity.value, 30)
+    unit  = try(each.value.refresh_token_validity.unit, "days")
+  }
+}
 
-  id_token_validity            = try(local.selected.id_token_validity.value, 60)
-  id_token_validity_units      = try(local.selected.id_token_validity.unit, "minutes")
+output "client_ids" {
+  value = { for name, mod in module.app_client : name => mod.client_id }
+}
 
-  refresh_token_validity       = try(local.selected.refresh_token_validity.value, 30)
-  refresh_token_validity_units = try(local.selected.refresh_token_validity.unit, "days")
+output "secret_arns" {
+  value = { for name, mod in module.app_client : name => mod.secret_arn }
 }
 
 variable "region" {
@@ -49,9 +63,4 @@ variable "region" {
 variable "env" {
   type        = string
   description = "Environment (dev, stg, prod)"
-}
-
-variable "app_name" {
-  type        = string
-  description = "Application name to deploy (must exist in apps.json)"
 }
