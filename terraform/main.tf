@@ -10,7 +10,7 @@ terraform {
 
 
 module "app_client" {
-  for_each = { for app in jsondecode(file("${path.module}/apps.json")) : app.name => app }
+  for_each = { for app in jsondecode(file("${path.module}/../apps.json")) : app.name => app }
   source   = "./modules/cognito-app-client"
   application_name = each.value.name
   client_type      = each.value.client_type
