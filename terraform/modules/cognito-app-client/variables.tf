@@ -27,14 +27,22 @@ variable "branding_assets_path" {
   type = string
 }
 variable "access_token_validity" {
-  type    = number
-  default = 60
+  type = object({
+    value = number
+    unit  = string
+  })
 }
+
 variable "id_token_validity" {
-  type    = number
-  default = 60
+  type = object({
+    value = number
+    unit  = string
+  })
 }
+
 variable "refresh_token_validity" {
-  type    = number
-  default = 30
+  type = object({
+    value = number
+    unit  = string
+  })
 }
