@@ -17,15 +17,15 @@ locals {
 #  identifier   = local.effective_resource_server_identifier
  # name         = local.effective_resource_server_name
 
-  dynamic "scope" {
-    for_each = var.custom_scopes
-    content {
-      # If scope looks like "<identifier>/read", strip prefix. Otherwise, keep as-is.
-      scope_name        = replace(scope.value, "${local.effective_resource_server_identifier}/", "")
-      scope_description = "Scope for ${var.application_name} ${replace(scope.value, "${local.effective_resource_server_identifier}/", "")}"
-    }
-  }
-}
+#  dynamic "scope" {
+#    for_each = var.custom_scopes
+#    content {
+#      # If scope looks like "<identifier>/read", strip prefix. Otherwise, keep as-is.
+#      scope_name        = replace(scope.value, "${local.effective_resource_server_identifier}/", "")
+#      scope_description = "Scope for ${var.application_name} ${replace(scope.value, "${local.effective_resource_server_identifier}/", "")}"
+#    }
+#  }
+#}
 
 # Create App Client in existing User Pool
 resource "aws_cognito_user_pool_client" "app_client" {
