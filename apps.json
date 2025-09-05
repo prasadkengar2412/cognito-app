@@ -1,20 +1,16 @@
 [
+
   {
-    "name": "app1",
-    "redirect_urls": ["https://app1.com/callback"],
-    "logout_urls": ["https://app1.com/logout"],
+    "name": "app4",
+    "client_type": "external",
+    "redirect_urls": ["https://app4.com/callback"],
+    "logout_urls": ["https://app4.com/logout"],
     "scopes": ["openid", "email"],
-    "custom_scopes": ["app1.api/read", "app1.api/write"],
-    "branding_settings_path": "./branding-setting.json",
-    "branding_assets_path": "./brandingassets.json"
-  },
-  {
-    "name": "app2",
-    "redirect_urls": ["https://app2.com/callback"],
-    "logout_urls": ["https://app2.com/logout"],
-    "scopes": ["openid", "profile"],
-    "custom_scopes": ["app2.api/read"],
-    "branding_settings_path": "./branding-setting.json",
-    "branding_assets_path": "./brandingassets.json"
+    "branding_settings_path": "branding-settings/app4-branding-setting.json",
+    "branding_assets_path": "branding-assets/app4-branding-assets.json",
+    "access_token_validity": { "value": 60, "unit": "minutes" },
+    "id_token_validity": { "value": 60, "unit": "minutes" },
+    "refresh_token_validity": { "value": 30, "unit": "days" }
   }
+ 
 ]

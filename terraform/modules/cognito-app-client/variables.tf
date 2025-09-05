@@ -7,6 +7,9 @@ variable "application_name" {
 variable "env" {
   type = string
 }
+variable "client_type" {
+  type = string
+}
 variable "redirect_urls" {
   type = list(string)
 }
@@ -21,8 +24,28 @@ variable "custom_scopes" {
   default = []
 }
 variable "branding_settings_path" {
-  type = string
+  type    = string
+  default = ""
 }
 variable "branding_assets_path" {
-  type = string
+  type    = string
+  default = ""
+}
+variable "access_token_validity" {
+  type = object({
+    value = number
+    unit  = string
+  })
+}
+variable "id_token_validity" {
+  type = object({
+    value = number
+    unit  = string
+  })
+}
+variable "refresh_token_validity" {
+  type = object({
+    value = number
+    unit  = string
+  })
 }

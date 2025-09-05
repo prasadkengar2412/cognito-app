@@ -1,0 +1,98 @@
+/* Body and page text */
+body {
+    background-color: #f9fafb; /* pageBackground.lightMode.color */
+    color: #000000; /* pageText.lightMode.bodyColor */
+    font-family: Arial, sans-serif;
+}
+
+/* Form */
+form {
+    background-color: #ffffff; /* form.lightMode.backgroundColor */
+    border-color: #c6c6cd;     /* form.lightMode.borderColor */
+    border-radius: 8px;        /* form.borderRadius */
+    padding: 20px;
+}
+
+/* Inputs */
+input {
+    background-color: #ffffff;   /* input.lightMode.defaults.backgroundColor */
+    border-color: #7d8998;       /* input.lightMode.defaults.borderColor */
+    border-radius: 8px;          /* input.borderRadius */
+    color: #000000;              /* inputLabel.lightMode.textColor */
+    padding: 8px;
+}
+
+/* Primary Button */
+button.primary {
+    background-color: #000000; /* primaryButton.lightMode.defaults.backgroundColor */
+    color: #ffffff;            /* primaryButton.lightMode.defaults.textColor */
+    border-radius: 8px;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+}
+
+button.primary:hover {
+    background-color: #fa4132; /* primaryButton.lightMode.hover.backgroundColor */
+    color: #ffffff;
+}
+
+button.primary:active {
+    background-color: #fa4132; /* primaryButton.lightMode.active.backgroundColor */
+    color: #000000;             /* primaryButton.lightMode.active.textColor */
+}
+
+/* Secondary Button */
+button.secondary {
+    background-color: #f5f5f5; /* secondaryButton.lightMode.defaults.backgroundColor */
+    color: #000000;             /* secondaryButton.lightMode.defaults.textColor */
+    border-radius: 8px;
+    border: 1px solid #f5f5f5;
+    padding: 10px 20px;
+    cursor: pointer;
+}
+
+button.secondary:hover {
+    background-color: #000000; /* secondaryButton.lightMode.hover.backgroundColor */
+    color: #ffffff;             /* secondaryButton.lightMode.hover.textColor */
+    border-color: #ffffff;      /* secondaryButton.lightMode.hover.borderColor */
+}
+
+button.secondary:active {
+    background-color: #000000; /* secondaryButton.lightMode.active.backgroundColor */
+    color: #ffffff;             /* secondaryButton.lightMode.active.textColor */
+    border-color: #ffffff;      /* secondaryButton.lightMode.active.borderColor */
+}
+
+/* Links */
+a {
+    color: #fa4132; /* link.lightMode.defaults.textColor */
+    text-decoration: none;
+}
+
+a:hover {
+    color: #9c2921; /* link.lightMode.hover.textColor */
+}
+
+/* Error Alerts */
+.alert-error {
+    background-color: #fff7f7; /* alert.lightMode.error.backgroundColor */
+    border-color: #d91515;     /* alert.lightMode.error.borderColor */
+    color: #d91515;
+    padding: 10px;
+    border-radius: 12px;
+}
+
+/* Footer */
+footer {
+    background-color: #fafafa; /* pageFooter.lightMode.background.color */
+    border-color: #d5dbdb;     /* pageFooter.lightMode.borderColor */
+    padding: 10px;
+}
+
+/* Header */
+header {
+    background-color: #fafafa; /* pageHeader.lightMode.background.color */
+    border-color: #d5dbdb;     /* pageHeader.lightMode.borderColor */
+    padding: 10px;
+}

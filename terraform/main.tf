@@ -4,13 +4,13 @@ provider "aws" {
 
 terraform {
   backend "s3" {
-    bucket         = "terraform-state-test-cognito"  
+    bucket = "terraform-state-test-cognito"
   }
 }
 
-# Read app configurations from apps.json
+# Read app configurations from apps.json in the root directory
 data "local_file" "apps_config" {
-  filename = "./apps.json"
+  filename = "${path.root}/../apps.json"
 }
 
 locals {
@@ -18,27 +18,33 @@ locals {
 }
 
 # Call module for each app
-module "app_clients" {
-  source   = "./modules/cognito-app-client"
+module "app_client" {
   for_each = { for app in local.apps : app.name => app }
+
+  source = "./modules/cognito-app-client"
 
   region                 = var.region
   application_name       = each.value.name
   env                    = var.env
+  client_type            = lookup(each.value, "client_type", "internal")
   redirect_urls          = each.value.redirect_urls
   logout_urls            = each.value.logout_urls
   scopes                 = each.value.scopes
   custom_scopes          = lookup(each.value, "custom_scopes", [])
-  branding_settings_path = "${path.root}/${lookup(local.selected, "branding_settings_path", "branding-setting.json")}"
-  branding_assets_path   = "${path.root}/${lookup(local.selected, "branding_assets_path", "brandingassets.json")}"
-}
 
-variable "region" {
-  type    = string
-  default = "us-east-1"
-}
+  branding_settings_path = lookup(each.value, "branding_settings_path", "") != "" ? "${path.root}/../${each.value.branding_settings_path}" : ""
+  branding_assets_path   = lookup(each.value, "branding_assets_path", "") != "" ? "${path.root}/../${each.value.branding_assets_path}" : ""
+  access_token_validity  = {
+    value = try(each.value.access_token_validity.value, 60)
+    unit  = try(each.value.access_token_validity.unit, "minutes")
+  }
+  id_token_validity      = {
+    value = try(each.value.id_token_validity.value, 60)
+    unit  = try(each.value.id_token_validity.unit, "minutes")
+  }
+  refresh_token_validity = {
+    value = try(each.value.refresh_token_validity.value, 30)
+    unit  = try(each.value.refresh_token_validity.unit, "days")
+  }
 
-variable "env" {
-  type        = string
-  description = "Environment (dev, stg, prod)"
 }

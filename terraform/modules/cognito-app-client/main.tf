@@ -73,6 +73,11 @@ resource "null_resource" "branding_version" {
 # Managed Branding (create or update) only if branding files exist
 resource "null_resource" "managed_branding" {
   count = local.apply_branding ? 1 : 0
+  triggers = {
+    branding_settings_hash = local.apply_branding ? sha1(data.local_file.branding_settings[0].content) : ""
+    branding_assets_hash   = local.apply_branding ? sha1(data.local_file.branding_assets[0].content) : ""
+  }
+
   provisioner "local-exec" {
     interpreter = ["/bin/bash", "-c"]
     command = <<EOT
@@ -88,6 +93,10 @@ resource "null_resource" "managed_branding" {
       echo "ℹ️ Applying branding for app ${var.application_name} (Client ID: $CLIENT_ID) in User Pool $POOL_ID"
       echo "ℹ️ Settings file: $SETTINGS_FILE"
       echo "ℹ️ Assets file: $ASSETS_FILE"
+      echo "ℹ️ AWS CLI version: $(aws --version 2>>"$ERROR_LOG")"
+      echo "ℹ️ jq version: $(jq --version 2>>"$ERROR_LOG")"
+      echo "ℹ️ Current directory: $(pwd) 2>>"$ERROR_LOG""
+
 
       # Validate JSON files
       if ! jq . "$SETTINGS_FILE" >/dev/null 2>>"$ERROR_LOG"; then
@@ -167,4 +176,28 @@ resource "aws_secretsmanager_secret_version" "app_secret_version" {
     clientid     = aws_cognito_user_pool_client.app_client.id
     clientsecret = aws_cognito_user_pool_client.app_client.client_secret
   })
+}
+
+# Clean up secret on destroy
+resource "null_resource" "secret_cleanup" {
+  triggers = {
+    secret_arn = aws_secretsmanager_secret.app_secret.arn
+    region     = var.region
+  }
+
+  provisioner "local-exec" {
+    when    = destroy
+    interpreter = ["/bin/bash", "-c"]
+    command = <<EOT
+      set -euo pipefail
+      echo "ℹ️ Permanently deleting secret ${self.triggers.secret_arn}"
+      aws secretsmanager delete-secret \
+        --region "${self.triggers.region}" \
+        --secret-id "${self.triggers.secret_arn}" \
+        --force-delete-without-recovery 2>secret_cleanup_error.log || echo "Secret already deleted or not found"
+      cat secret_cleanup_error.log
+    EOT
+  }
+
+  depends_on = [aws_secretsmanager_secret.app_secret]
 }
