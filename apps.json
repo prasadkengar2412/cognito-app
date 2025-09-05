@@ -30,5 +30,12 @@
     "access_token_validity": { "value": 30, "unit": "minutes" },
     "id_token_validity": { "value": 30, "unit": "minutes" },
     "refresh_token_validity": { "value": 15, "unit": "days" }
+  },
+  {
+    "name": "app6",
+    "client_type": "internal",
+    "redirect_urls": ["https://app5.com/callback"],
+    "logout_urls": ["https://app5.com/logout"],
+    "scopes": ["openid", "email"]
   }
 ]
