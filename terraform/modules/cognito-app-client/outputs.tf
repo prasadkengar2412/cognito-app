@@ -10,8 +10,12 @@ output "secret_arn" {
 
 output "branding_files_used" {
   description = "Branding files used for this app client"
-  value       = local.apply_branding ? {
+  value = local.apply_branding ? {
     settings = var.branding_settings_path
     assets   = var.branding_assets_path
-  } : "No branding files applied for ${var.application_name}"
+  } : {
+    settings = ""
+    assets   = ""
+    message  = "No branding files applied for ${var.application_name}"
+  }
 }
