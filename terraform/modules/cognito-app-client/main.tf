@@ -8,14 +8,14 @@ data "aws_ssm_parameter" "user_pool_id" {
 resource "aws_cognito_resource_server" "app_resource_server" {
   for_each    = length(var.custom_scopes) > 0 ? { "${var.application_name}" = var.application_name } : {}
   user_pool_id = data.aws_ssm_parameter.user_pool_id.value
-  identifier   = var.resource_server_identifier
-  name         = var.resource_server_name
+  identifier   = coalesce(var.resource_server_identifier, "${var.application_name}.api")
+  name         = coalesce(var.resource_server_name, "${var.application_name}_api")
 
   dynamic "scope" {
     for_each = var.custom_scopes
     content {
-      scope_name        = replace(scope.value, "${var.resource_server_identifier}/", "")
-      scope_description = "Scope for ${var.application_name} ${replace(scope.value, "${var.resource_server_identifier}/", "")}"
+      scope_name        = replace(scope.value, "${var.application_name}.api/", "")
+      scope_description = "Scope for ${var.application_name} ${replace(scope.value, "${var.application_name}.api/", "")}"
     }
   }
 }
