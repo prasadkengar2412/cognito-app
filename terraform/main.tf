@@ -22,7 +22,7 @@ locals {
 # - branding-settings/branding-settings.json
 # - branding-assets/branding-assets.json
 locals {
-  global_branding_settings = "${path.root}/../branding-settings/branding-settings.json"
+  global_branding_settings = "${path.root}/../branding-settings/branding-setting.json"
   global_branding_assets   = "${path.root}/../branding-assets/branding-assets.json"
 }
 
