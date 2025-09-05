@@ -18,5 +18,13 @@ resource "aws_cognito_resource_server" "this" {
 }
 
 output "scopes" {
-  value = [for s in var.scopes : s]
+  value = [for s in var.scopes : "${var.identifier}/${s}"]
+}
+
+output "identifier" {
+  value = var.identifier
+}
+
+output "name" {
+  value = var.name
 }
