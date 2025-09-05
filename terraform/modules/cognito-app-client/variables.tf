@@ -26,3 +26,15 @@ variable "branding_settings_path" {
 variable "branding_assets_path" {
   type = string
 }
+variable "access_token_validity" {
+  type    = number
+  default = 60
+}
+variable "id_token_validity" {
+  type    = number
+  default = 60
+}
+variable "refresh_token_validity" {
+  type    = number
+  default = 30
+}
