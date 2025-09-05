@@ -48,7 +48,7 @@ resource "aws_cognito_user_pool_client" "app_client" {
 
 # Read Branding Files only if paths are provided and files exist
 locals {
-  apply_branding = var.branding_settings_path != "" && var.branding_assets_path != "" && fileexists(var.branding_settings_path) && fileexists(var.branding_assets_path)
+  apply_branding = var.branding_settings_path != "" && var.branding_assets_path != "" ? fileexists(var.branding_settings_path) && fileexists(var.branding_assets_path) : false
 }
 
 data "local_file" "branding_settings" {
