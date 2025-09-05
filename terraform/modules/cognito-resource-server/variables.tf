@@ -1,4 +1,15 @@
-variable "env" { type = string }
-variable "identifier" { type = string }
-variable "name" { type = string }
-variable "scopes" { type = list(string) }
+variable "region" {
+  type = string
+}
+
+variable "env" {
+  type = string
+}
+
+variable "resource_servers" {
+  type = list(object({
+    identifier = string
+    name       = string
+    scopes     = list(string)
+  }))
+}
