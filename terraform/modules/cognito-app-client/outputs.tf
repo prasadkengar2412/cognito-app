@@ -1,6 +1,7 @@
-output "client_id" {
-  value = aws_cognito_user_pool_client.app_client.id
+output "client_ids" {
+  value = { for name, mod in module.app_client : name => mod.client_id }
 }
-output "secret_arn" {
-  value = aws_secretsmanager_secret.app_secret.arn
+
+output "secret_arns" {
+  value = { for name, mod in module.app_client : name => mod.secret_arn }
 }
