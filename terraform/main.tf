@@ -31,9 +31,14 @@ module "app_client" {
   custom_scopes          = lookup(local.selected, "custom_scopes", [])
   branding_settings_path = "${path.root}/../${lookup(local.selected, "branding_settings_path", "branding-setting.css")}"
   branding_assets_path   = "${path.root}/../${lookup(local.selected, "branding_assets_path", "branding-assets.json")}"
-  access_token_validity   = local.selected.access_token_validity
-  id_token_validity       = local.selected.id_token_validity
-  refresh_token_validity  = local.selected.refresh_token_validity
+  access_token_validity        = try(local.selected.access_token_validity.value, 60)
+  access_token_validity_units  = try(local.selected.access_token_validity.unit, "minutes")
+
+  id_token_validity            = try(local.selected.id_token_validity.value, 60)
+  id_token_validity_units      = try(local.selected.id_token_validity.unit, "minutes")
+
+  refresh_token_validity       = try(local.selected.refresh_token_validity.value, 30)
+  refresh_token_validity_units = try(local.selected.refresh_token_validity.unit, "days")
 }
 
 variable "region" {
