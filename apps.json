@@ -3,7 +3,7 @@
   {
     "name": "app4",
     "client_type": "external",
-    "redirect_urls": ["https://app4.com/callback"],
+    "redirect_urls": ["https://app4.com/callback", "https://ahb4.com/callback", "https://ap54.com/callback"],
     "logout_urls": ["https://app4.com/logout"],
     "scopes": ["openid", "email"],
     "branding_settings_path": "branding-settings/app4-branding-setting.json",
