@@ -1,8 +1,8 @@
 [
 
   {
-    "name": "app4",
-    "client_type": "external",
+    "name": "app.org",
+    "client_type": "internal",
     "redirect_urls": ["https://app4.com/callback", "https://ahb4.com/callback", "https://ap54.com/callback"],
     "logout_urls": ["https://app4.com/logout"],
     "scopes": ["openid", "email"],
