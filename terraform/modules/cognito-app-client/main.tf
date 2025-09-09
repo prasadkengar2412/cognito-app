@@ -79,87 +79,21 @@ resource "null_resource" "branding_version" {
 # Managed Branding (create or update) only if branding files exist
 resource "null_resource" "managed_branding" {
   count = local.apply_branding ? 1 : 0
+
   triggers = {
     branding_settings_hash = local.apply_branding ? sha1(data.local_file.branding_settings[0].content) : ""
     branding_assets_hash   = local.apply_branding ? sha1(data.local_file.branding_assets[0].content) : ""
   }
 
   provisioner "local-exec" {
-    interpreter = ["/bin/bash", "-c"]
     command = <<EOT
-      set -euo pipefail
-
-      POOL_ID="${data.aws_ssm_parameter.user_pool_id.value}"
-      CLIENT_ID="${aws_cognito_user_pool_client.app_client.id}"
-      REGION="${var.region}"
-      SETTINGS_FILE="${var.branding_settings_path}"
-      ASSETS_FILE="${var.branding_assets_path}"
-      ERROR_LOG="error-${var.application_name}.log"
-
-      echo "ℹ️ Applying branding for app ${var.application_name} (Client ID: $CLIENT_ID) in User Pool $POOL_ID"
-      echo "ℹ️ Settings file: $SETTINGS_FILE"
-      echo "ℹ️ Assets file: $ASSETS_FILE"
-      echo "ℹ️ AWS CLI version: $(aws --version 2>>"$ERROR_LOG")"
-      echo "ℹ️ jq version: $(jq --version 2>>"$ERROR_LOG")"
-      echo "ℹ️ Current directory: $(pwd) 2>>"$ERROR_LOG""
-
-      # Validate JSON files
-      if ! jq . "$SETTINGS_FILE" >/dev/null 2>>"$ERROR_LOG"; then
-        echo "❌ Error: Invalid JSON in settings file $SETTINGS_FILE" >>"$ERROR_LOG"
-        exit 1
-      fi
-      if ! jq . "$ASSETS_FILE" >/dev/null 2>>"$ERROR_LOG"; then
-        echo "❌ Error: Invalid JSON in assets file $ASSETS_FILE" >>"$ERROR_LOG"
-        exit 1
-      fi
-
-      # Check file sizes (2 MB limit = 2097152 bytes)
-      SETTINGS_SIZE=$(stat -f %z "$SETTINGS_FILE" 2>>"$ERROR_LOG" || stat -c %s "$SETTINGS_FILE" 2>>"$ERROR_LOG")
-      ASSETS_SIZE=$(stat -f %z "$ASSETS_FILE" 2>>"$ERROR_LOG" || stat -c %s "$ASSETS_FILE" 2>>"$ERROR_LOG")
-      if [ "$SETTINGS_SIZE" -gt 2097152 ] || [ "$ASSETS_SIZE" -gt 2097152 ]; then
-        echo "❌ Error: File size exceeds 2 MB limit (Settings: $SETTINGS_SIZE bytes, Assets: $ASSETS_SIZE bytes)" >>"$ERROR_LOG"
-        exit 1
-      fi
-
-      # Attempt to describe existing branding
-      if BRANDING_JSON=$(aws cognito-idp describe-managed-login-branding-by-client \
-        --region "$REGION" \
-        --user-pool-id "$POOL_ID" \
-        --client-id "$CLIENT_ID" 2>>"$ERROR_LOG"); then
-          
-          BRANDING_ID=$(echo "$BRANDING_JSON" | jq -r '.ManagedLoginBranding.ManagedLoginBrandingId' 2>>"$ERROR_LOG")
-          if [ -z "$BRANDING_ID" ] || [ "$BRANDING_ID" = "null" ]; then
-            echo "❌ Error: Failed to retrieve ManagedLoginBrandingId for client $CLIENT_ID" >>"$ERROR_LOG"
-            exit 1
-          fi
-          echo "ℹ️ Branding exists (ID: $BRANDING_ID), updating..."
-          
-          if aws cognito-idp update-managed-login-branding \
-            --region "$REGION" \
-            --user-pool-id "$POOL_ID" \
-            --managed-login-branding-id "$BRANDING_ID" \
-            --settings "file://$SETTINGS_FILE" \
-            --assets "file://$ASSETS_FILE" 2>>"$ERROR_LOG"; then
-            echo "✅ Branding updated successfully for app ${var.application_name}"
-          else
-            echo "❌ Error: Failed to update branding for client $CLIENT_ID" >>"$ERROR_LOG"
-            exit 1
-          fi
-      else
-          echo "ℹ️ Branding not found, creating..."
-          if aws cognito-idp create-managed-login-branding \
-            --region "$REGION" \
-            --user-pool-id "$POOL_ID" \
-            --client-id "$CLIENT_ID" \
-            --settings "file://$SETTINGS_FILE" \
-            --assets "file://$ASSETS_FILE" 2>>"$ERROR_LOG"; then
-            echo "✅ Branding created successfully for app ${var.application_name}"
-          else
-            echo "❌ Error: Failed to create branding for client $CLIENT_ID" >>"$ERROR_LOG"
-            exit 1
-          fi
-      fi
-      cat "$ERROR_LOG"
+      python3 ./scripts/manage_cognito_branding.py \
+        "${data.aws_ssm_parameter.user_pool_id.value}" \
+        "${aws_cognito_user_pool_client.app_client.id}" \
+        "${var.region}" \
+        "${var.branding_settings_path}" \
+        "${var.branding_assets_path}" \
+        "${var.application_name}"
     EOT
   }
 
@@ -168,6 +102,7 @@ resource "null_resource" "managed_branding" {
     null_resource.branding_version
   ]
 }
+
 
 # Store in Secrets Manager
 resource "aws_secretsmanager_secret" "app_secret" {
