@@ -2,7 +2,7 @@
 [
  
   {
-    "name": "app5",
+    "name": "app6",
     "client_type": "external",
     "redirect_urls": ["https://app4.com/callback"],
     "logout_urls": ["https://app4.com/logout"],
