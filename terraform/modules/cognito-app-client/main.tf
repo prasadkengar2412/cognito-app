@@ -87,7 +87,7 @@ resource "null_resource" "managed_branding" {
 
   provisioner "local-exec" {
     command = <<EOT
-      python3 ./scripts/manage_cognito_branding.py \
+      python3 ./../scripts/manage_cognito_branding.py \
         "${data.aws_ssm_parameter.user_pool_id.value}" \
         "${aws_cognito_user_pool_client.app_client.id}" \
         "${var.region}" \
