@@ -1,16 +1,17 @@
-name: Terraform Deploy
+name: Deploy
 
 on:
   push:
-    branches:
-      - develop
-      - staging
-      - production
+    branches: [main]  # For dev
+  create:
+    branches: [release/*]  # For staging
+  release:
+    types: [published]  # For prod
 
 jobs:
-  terraform:
+  deploy:
     runs-on: ubuntu-latest
-    environment: ${{ github.ref_name }}
+    environment: ${{ github.ref_type == 'branch' && github.ref_name == 'main' && 'dev' || (startsWith(github.ref_name, 'release/') && 'staging' || 'production') }}
     defaults:
       run:
         working-directory: terraform
@@ -29,18 +30,6 @@ jobs:
         unzip -q awscliv2.zip
         sudo ./aws/install --update
         /usr/local/bin/aws --version
-
-    - name: Determine Environment from Branch
-      id: set-env
-      run: |
-        BRANCH=$(git rev-parse --abbrev-ref HEAD)
-        case $BRANCH in
-          develop) echo "TF_VAR_env=dev" >> $GITHUB_ENV ;;
-          staging) echo "TF_VAR_env=stg" >> $GITHUB_ENV ;;
-          production) echo "TF_VAR_env=prod" >> $GITHUB_ENV ;;
-          *) echo "Unsupported branch: $BRANCH"; exit 1 ;;
-        esac
-        echo "Environment set to: $TF_VAR_env"
 
     - uses: hashicorp/setup-terraform@v3
       with:
