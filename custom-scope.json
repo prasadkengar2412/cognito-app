@@ -1,0 +1,8 @@
+[
+  {
+    "identifier": "app5.api",
+    "name": "app5",
+    "scopes": ["read","write"]
+  }
+  
+]
