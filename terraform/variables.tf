@@ -11,3 +11,12 @@ variable "env" {
     error_message = "env must be one of dev, stg, prod"
   }
 }
+variable "resource_servers" {
+  type = list(object({
+    identifier = string
+    name       = string
+    scopes     = list(string)
+  }))
+  description = "List of resource servers and their scopes"
+  default     = []
+}
