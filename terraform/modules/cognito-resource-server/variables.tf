@@ -12,4 +12,6 @@ variable "resource_servers" {
     name       = string
     scopes     = list(string)
   }))
+  default     = []
+  description = "List of resource servers and their scopes"
 }
