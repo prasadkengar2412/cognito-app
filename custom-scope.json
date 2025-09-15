@@ -3,6 +3,10 @@
     "identifier": "app5.api",
     "name": "app5",
     "scopes": ["read","write"]
+  },
+  {
+    "identifier": "app6.api",
+    "name": "app6",
+    "scopes": ["read"]
   }
-  
 ]
