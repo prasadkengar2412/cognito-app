@@ -22,17 +22,20 @@ jobs:
       run: |
           if [ "${{ github.ref_name }}" = "main" ]; then
             echo "ENVIRONMENT=dev" >> $GITHUB_ENV
+            echo "TF_VAR_env=$ENVIRONMENT" >> $GITHUB_ENV
             echo "TF_VAR_region=${{ vars.REGION }}" >> $GITHUB_ENV
             echo "TF_VAR_short_region=${{ vars.SHORT_REGION }}" >> $GITHUB_ENV
             echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> $GITHUB_ENV
             echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> $GITHUB_ENV
           elif [[ "${{ github.ref_name }}" == release/* ]]; then
+            echo "TF_VAR_env=$ENVIRONMENT" >> $GITHUB_ENV
             echo "ENVIRONMENT=stg" >> $GITHUB_ENV
             echo "TF_VAR_region=${{ vars.REGION }}" >> $GITHUB_ENV
             echo "TF_VAR_short_region=${{ vars.SHORT_REGION }}" >> $GITHUB_ENV
             echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> $GITHUB_ENV
             echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> $GITHUB_ENV
           else
+            echo "TF_VAR_env=$ENVIRONMENT" >> $GITHUB_ENV
             echo "ENVIRONMENT=prod" >> $GITHUB_ENV
             echo "TF_VAR_region=${{ vars.REGION }}" >> $GITHUB_ENV
             echo "TF_VAR_short_region=${{ vars.SHORT_REGION }}" >> $GITHUB_ENV
