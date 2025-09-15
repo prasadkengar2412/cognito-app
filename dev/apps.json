@@ -13,5 +13,17 @@
     "access_token_validity": { "value": 60, "unit": "minutes" },
     "id_token_validity": { "value": 60, "unit": "minutes" },
     "refresh_token_validity": { "value": 30, "unit": "days" }
+  },
+{
+    "name": "app7",
+    "client_type": "external",
+    "redirect_urls": ["https://app5.com/callback"],
+    "logout_urls": ["https://app5.com/logout"],
+    "scopes": ["openid", "email"],
+    "custom_scopes": ["app6.api/read"],
+    "access_token_validity": { "value": 60, "unit": "minutes" },
+    "id_token_validity": { "value": 60, "unit": "minutes" },
+    "refresh_token_validity": { "value": 30, "unit": "days" }
   }
+ 
 ]
