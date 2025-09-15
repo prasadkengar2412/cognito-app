@@ -49,7 +49,7 @@ resource "aws_cognito_user_pool_client" "app_client" {
     id_token      = var.id_token_validity.unit
     refresh_token = var.refresh_token_validity.unit
   }
-  depends_on = [module.resource_servers]
+  depends_on = var.resource_server_depends_on
 }
 
 # Read Branding Files only if paths are provided and files exist
