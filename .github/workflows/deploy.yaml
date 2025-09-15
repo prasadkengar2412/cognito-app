@@ -4,7 +4,10 @@ on:
   push:
     branches: [main]  # For dev
   create:
-    branches: [release/*]  # For staging
+  pull_request:
+    types: [closed]
+    branches:
+      - 'release/**'
   release:
     types: [published]  # For prod
 
