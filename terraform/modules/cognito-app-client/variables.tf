@@ -53,9 +53,4 @@ variable "branding_assets_path" {
   type    = string
   default = ""
 }
-variable "resource_server_depends_on" {
-  type        = any
-  description = "Resource server module dependency"
-  default     = []
-}
 
