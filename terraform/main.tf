@@ -25,7 +25,7 @@ module "resource_servers" {
   source           = "./modules/cognito-resource-server"
   region           = var.region
   env              = var.env
-  resource_servers = var.resource_servers
+  resource_servers = local.resource_servers
 }
 
 module "app_clients" {
@@ -43,7 +43,7 @@ module "app_clients" {
 
   branding_settings_path = "${path.root}/branding-settings/branding-setting.json"
   branding_assets_path   = "${path.root}/branding-assets/branding-assets.json"
-  resource_server_depends_on = [module.resource_servers]
+
 
   access_token_validity = {
     value = try(each.value.access_token_validity.value, 60)
