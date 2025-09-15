@@ -2,7 +2,7 @@ name: Deploy
 
 on:
   push:
-    branches: [main]  # For dev
+    branches: [mainb]  # For dev
   create:
     branches: [release/*]  # For staging
   release:
