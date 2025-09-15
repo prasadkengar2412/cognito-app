@@ -50,7 +50,7 @@ resource "aws_cognito_user_pool_client" "app_client" {
     refresh_token = var.refresh_token_validity.unit
   }
   depends_on = [
-    mosule.resource_servers
+    module.resource_servers
   ]
 }
 
