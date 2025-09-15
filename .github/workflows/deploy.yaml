@@ -15,14 +15,30 @@ jobs:
     defaults:
       run:
         working-directory: terraform
-    env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      TF_VAR_region: ${{ vars.REGION }}
-      TF_VAR_short_region: ${{ vars.SHORT_REGION }}
-
     steps:
     - uses: actions/checkout@v4
+    - name: Determine environment and set variables
+      id: set-vars
+      run: |
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            echo "ENVIRONMENT=dev" >> $GITHUB_ENV
+            echo "TF_VAR_region=${{ vars.REGION }}" >> $GITHUB_ENV
+            echo "TF_VAR_region=${{ vars.SHORT_REGION }}" >> $GITHUB_ENV
+            echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> $GITHUB_ENV
+            echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} >> $GITHUB_ENV
+          elif [[ "${{ github.ref_name }}" == release/* ]]; then
+            echo "ENVIRONMENT=stg" >> $GITHUB_ENV
+            echo "TF_VAR_region=${{ vars.REGION }}" >> $GITHUB_ENV
+            echo "TF_VAR_region=${{ vars.SHORT_REGION }}" >> $GITHUB_ENV
+            echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> $GITHUB_ENV
+            echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} >> $GITHUB_ENV
+          else
+            echo "ENVIRONMENT=prod" >> $GITHUB_ENV
+            echo "TF_VAR_region=${{ vars.REGION }}" >> $GITHUB_ENV
+            echo "TF_VAR_region=${{ vars.SHORT_REGION }}" >> $GITHUB_ENV
+            echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> $GITHUB_ENV
+            echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} >> $GITHUB_ENV
+          fi
 
     - name: Upgrade AWS CLI v2
       run: |
