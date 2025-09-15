@@ -43,6 +43,7 @@ module "app_clients" {
 
   branding_settings_path = "${path.root}/branding-settings/branding-setting.json"
   branding_assets_path   = "${path.root}/branding-assets/branding-assets.json"
+  depends_on = [module.resource_servers]
 
 
   access_token_validity = {
