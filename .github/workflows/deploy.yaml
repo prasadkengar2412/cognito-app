@@ -10,7 +10,7 @@ on:
     branches:
       - 'release/**'
   release:
-    types: [published]  # For prod
+    types: [published]  # 
 
 jobs:
   deploy:
