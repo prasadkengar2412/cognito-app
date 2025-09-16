@@ -1,4 +1,5 @@
-  {
+  [
+    {
     "name": "apli2",
     "client_type": "internal",
     "redirect_urls": ["https://app4.com/callback"],
@@ -10,3 +11,4 @@
     "id_token_validity": { "value": 60, "unit": "minutes" },
     "refresh_token_validity": { "value": 30, "unit": "days" }
   }
+  ]
