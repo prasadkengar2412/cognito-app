@@ -11,7 +11,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: ${{ github.ref_type == 'tag' && startsWith(github.ref_name, 'v*') && 'production' || (github.ref_type == 'branch' && github.ref_name == 'main' && 'develop') || (github.ref_type == 'branch' && startsWith(github.ref_name, 'release/') && 'staging') }}
+    environment: ${{ startsWith(github.ref_name, 'v*') && 'production' || (github.ref_type == 'branch' && github.ref_name == 'main' && 'develop') || (github.ref_type == 'branch' && startsWith(github.ref_name, 'release/') && 'staging') }}
 
 
     defaults:
