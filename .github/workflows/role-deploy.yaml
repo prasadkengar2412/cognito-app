@@ -55,7 +55,6 @@ jobs:
 
       - name: Deploy Changed Lambdas
         run: |
-              --config-env $ENVIRONMENT \
               --template-file role-template.yaml
               --parameter-overrides \
                 Environment=$ENVIRONMENT \
