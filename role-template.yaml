@@ -57,7 +57,7 @@ Resources:
                   - cognito-idp:AdminUpdateUserAttributes
                   - cognito-idp:ListUsers
                   - cognito-idp:InitiateAuth
-                Resource: "arn:aws:cognito-idp:us-east-2:713096641189:userpool/us-east-2_Pn0LZeLh8"
+                Resource: "arn:aws:cognito-idp:us-east-2:713096641189:userpool/*"
               - Effect: Allow
                 Action:
                   - sqs:DeleteMessage
@@ -69,6 +69,13 @@ Resources:
                   - ssm:GetParameter
                   - ssm:GetParameters
                 Resource: "*"
+              - Sid: SecretAccess
+                Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                  - secretsmanager:DescribeSecret
+                  - secretsmanager:ListSecretVersionIds
+                Resource: '*'
   LambdaPermissionForCognitopostComfirmation:
     Type: AWS::Lambda::Permission
     Properties:
