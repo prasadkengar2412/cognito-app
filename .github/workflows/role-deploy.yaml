@@ -55,7 +55,9 @@ jobs:
 
       - name: Deploy Changed Lambdas
         run: |
-              --template-file role-template.yaml
+            sam deploy \
+              --config-env $ENVIRONMENT \
+              --template-file role-template.yaml \
               --parameter-overrides \
                 Environment=$ENVIRONMENT \
               --region ${{ vars.AWS_REGION }} \
