@@ -56,6 +56,7 @@ Resources:
                 Action: 
                   - cognito-idp:AdminUpdateUserAttributes
                   - cognito-idp:ListUsers
+                  - cognito-idp:InitiateAuth
                 Resource: "arn:aws:cognito-idp:us-east-2:713096641189:userpool/us-east-2_Pn0LZeLh8"
               - Effect: Allow
                 Action:
