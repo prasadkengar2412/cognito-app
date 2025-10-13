@@ -81,6 +81,6 @@ Resources:
     UpdateReplacePolicy: Retain
     Properties:
       Action: lambda:InvokeFunction
-      FunctionName: "arn:aws:lambda:us-east-2:713096641189:function:rotation_iam_test"
+      FunctionName: "arn:aws:lambda:us-east-2:713096641189:function:TestFun"
       Principal: cognito-idp.amazonaws.com
       SourceArn: "arn:aws:cognito-idp:us-east-2:713096641189:userpool/us-east-2_Pn0LZeLh8"
