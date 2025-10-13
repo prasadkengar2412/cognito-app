@@ -1,0 +1,68 @@
+name: Deploy Cognito Lambda Triggers.
+
+on:
+  push:
+    branches:
+      - develop
+      - 'release/**'
+  release:
+    types: [published]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_type == 'tag' && startsWith(github.ref_name, 'v') && 'production' || (github.ref_type == 'branch' && github.ref_name == 'develop' && 'develop') || (github.ref_type == 'branch' && startsWith(github.ref_name, 'release/') && 'staging') }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Determine branch and set variables
+        id: set-vars
+        run: |
+          if [ "$GITHUB_REF_TYPE" = "branch" ] && [ "$GITHUB_REF_NAME" = "develop" ]; then
+            echo "ENVIRONMENT=dev" >> $GITHUB_ENV
+            echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> $GITHUB_ENV
+            echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> $GITHUB_ENV
+          elif [ "$GITHUB_REF_TYPE" = "branch" ] && [[ "$GITHUB_REF_NAME" == release/* ]]; then
+            echo "ENVIRONMENT=stg" >> $GITHUB_ENV
+            echo "AWS_ACCESS_KEY_ID=${{ secrets.NON_PROD_AWS_ACCESS_KEY_ID }}" >> $GITHUB_ENV
+            echo "AWS_SECRET_ACCESS_KEY=${{ secrets.NON_PROD_AWS_SECRET_ACCESS_KEY }}" >> $GITHUB_ENV
+          elif [ "$GITHUB_REF_TYPE" = "tag" ] && [[ "$GITHUB_REF_NAME" == v* ]]; then
+            echo "ENVIRONMENT=prod" >> $GITHUB_ENV
+            echo "AWS_ACCESS_KEY_ID=${{ secrets.PROD_AWS_ACCESS_KEY_ID }}" >> $GITHUB_ENV
+            echo "AWS_SECRET_ACCESS_KEY=${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}" >> $GITHUB_ENV
+          fi
+
+      - name: Log Variables
+        run: |
+          echo "Using ENVIRONMENT: ${{ env.ENVIRONMENT }}"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Build with AWS SAM
+        run: sam build --template-file role-template.yaml
+
+      - name: Deploy Changed Lambdas
+        run: |
+              --config-env $ENVIRONMENT \
+              --template-file role-template.yaml
+              --parameter-overrides \
+                Environment=$ENVIRONMENT \
+              --region ${{ vars.AWS_REGION }} \
+              --s3-bucket ${{ env.SAM_BUCKET }} \
+              --capabilities CAPABILITY_NAMED_IAM \
+              --no-fail-on-empty-changeset \
+              --disable-rollback \
+              --no-confirm-changeset \
+              --stack-name ulng-cf-trigger-lambdas-$ENVIRONMENT
