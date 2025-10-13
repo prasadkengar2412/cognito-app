@@ -54,15 +54,15 @@ Resources:
                 Resource: "*"
               - Effect: Allow
                 Action: cognito-idp:AdminUpdateUserAttributes
-                Resource:"*"
+                Resource: "*"
               - Effect: Allow
                 Action:
                   - sqs:DeleteMessage
                   - sqs:SendMessage
                   - sqs:GetQueueAttributes
-                Resource:"*"
+                Resource: "*"
               - Effect: Allow
                 Action:
                   - ssm:GetParameter
                   - ssm:GetParameters
-                Resource:"*"
+                Resource: "*"
