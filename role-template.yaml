@@ -53,7 +53,9 @@ Resources:
                   - kms:DescribeKey
                 Resource: "*"
               - Effect: Allow
-                Action: cognito-idp:AdminUpdateUserAttributes
+                Action: 
+                  - cognito-idp:AdminUpdateUserAttributes
+                  - cognito-idp:ListUsers
                 Resource: "*"
               - Effect: Allow
                 Action:
