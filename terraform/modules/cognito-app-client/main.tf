@@ -57,8 +57,6 @@ resource "aws_cognito_user_pool_client" "app_client" {
     refresh_token = var.refresh_token_validity.unit
   }
 
-  # Enable token revocation (conditionally for apli1)
-  enable_token_revocation = var.application_name == "apli1" ? true : false
 
   # Enable refresh token rotation (conditionally for apli1)
   dynamic "refresh_token_rotation_rules" {
@@ -68,7 +66,6 @@ resource "aws_cognito_user_pool_client" "app_client" {
     }
   }
 }
-
 # Read Branding Files only if paths are provided and files exist
 locals {
   apply_branding = var.branding_settings_path != "" && var.branding_assets_path != "" ? fileexists(var.branding_settings_path) && fileexists(var.branding_assets_path) : false
