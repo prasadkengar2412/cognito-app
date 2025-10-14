@@ -59,9 +59,16 @@ resource "aws_cognito_user_pool_client" "app_client" {
   }
 
   # Enable token revocation (for apli1)
-  enable_token_revocation = var.application_name == "apli1" ? true : false
-  enable_refresh_token_rotation =var.application_name == "apli1" ? true : false
+  #enable_token_revocation = var.application_name == "apli1" ? true : false
 
+  # Enable refresh token rotation using the dedicated block
+  dynamic "refresh_token_rotation" {
+    for_each = var.application_name == "apli1" ? ["enabled"] : []
+    content {
+      feature = "ENABLED"
+      # Optional: Set a grace period for the old token
+      retry_grace_period_seconds = 30 
+    }
   }
 }
 
