@@ -40,8 +40,7 @@ resource "aws_cognito_user_pool_client" "app_client" {
   supported_identity_providers         = ["COGNITO"]
   explicit_auth_flows = var.application_name == "apli1" ? [
     "ALLOW_USER_SRP_AUTH",
-    "ALLOW_USER_PASSWORD_AUTH",
-    "ADMIN_NO_SRP_AUTH"
+    "ALLOW_USER_PASSWORD_AUTH"
   ] : [
     "ALLOW_REFRESH_TOKEN_AUTH",
     "ALLOW_USER_AUTH",
