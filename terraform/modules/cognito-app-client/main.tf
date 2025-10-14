@@ -57,7 +57,7 @@ resource "aws_cognito_user_pool_client" "app_client" {
     id_token      = var.id_token_validity.unit
     refresh_token = var.refresh_token_validity.unit
   }
-  enable_refresh_token_rotation = each.value.name == "apli1" ? true : false
+  
 
 }
 
