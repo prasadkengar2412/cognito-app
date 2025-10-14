@@ -57,12 +57,14 @@ resource "aws_cognito_user_pool_client" "app_client" {
     refresh_token = var.refresh_token_validity.unit
   }
 
+  # Enable token revocation (for apli1)
+  enable_token_revocation = var.application_name == "apli1" ? true : false
 
-  # Enable refresh token rotation (conditionally for apli1)
+  # Enable refresh token rotation (for apli1)
   dynamic "refresh_token_rotation_rules" {
     for_each = var.application_name == "apli1" ? [1] : []
     content {
-      rotation_duration_in_seconds = 3600  # 1 hour; adjust as needed (3,600s to 86,400s)
+      rotation_duration_in_seconds = 3600  # 1 hour; range: 3,600s to 86,400s
     }
   }
 }
