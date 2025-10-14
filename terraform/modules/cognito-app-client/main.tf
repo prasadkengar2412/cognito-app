@@ -38,35 +38,16 @@ resource "aws_cognito_user_pool_client" "app_client" {
   allowed_oauth_flows_user_pool_client = true
   allowed_oauth_scopes                 = concat(var.scopes, var.custom_scopes)
   supported_identity_providers         = ["COGNITO"]
-  explicit_auth_flows = var.application_name == "apli1" ? [
-    "ALLOW_USER_SRP_AUTH",
-    "ALLOW_USER_PASSWORD_AUTH",
-    "ADMIN_NO_SRP_AUTH"
-  ] : [
-    "ALLOW_REFRESH_TOKEN_AUTH",
-    "ALLOW_USER_AUTH",
-    "ALLOW_USER_SRP_AUTH"
-  ]
+  explicit_auth_flows                  = ["ALLOW_REFRESH_TOKEN_AUTH", "ALLOW_USER_AUTH", "ALLOW_USER_SRP_AUTH"]
 
-  # ✅ Token rotation & revocation for only 'apli1'
-  dynamic "refresh_token_rotation" {
-    for_each = var.application_name == "apli1" ? [1] : []
-    content {
-      feature                    = "ENABLED"
-      retry_grace_period_seconds  = 30
-    }
-  }
-
-  enable_token_revocation = var.application_name == "apli1" ? true : false
-
-  access_token_validity        = each.value.access_token_validity.value
-  id_token_validity            = each.value.id_token_validity.value
-  refresh_token_validity       = each.value.refresh_token_validity.value
+  access_token_validity        = var.access_token_validity.value
+  id_token_validity            = var.id_token_validity.value
+  refresh_token_validity       = var.refresh_token_validity.value
 
   token_validity_units {
-    access_token  = each.value.access_token_validity.unit
-    id_token      = each.value.id_token_validity.unit
-    refresh_token = each.value.refresh_token_validity.unit
+    access_token  = var.access_token_validity.unit
+    id_token      = var.id_token_validity.unit
+    refresh_token = var.refresh_token_validity.unit
   }
 
 }
