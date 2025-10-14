@@ -29,16 +29,19 @@ data "aws_ssm_parameter" "user_pool_id" {
 
 # Create App Client in existing User Pool
 resource "aws_cognito_user_pool_client" "app_client" {
-  name                                 = "ulng-appclient-${var.application_name}-${var.client_type}-${var.env}"
+  for_each = { for app in local.apps : app.name => app }
+
+  name                                 = "ulng-appclient-${each.value.name}-${each.value.client_type}-${var.env}"
   user_pool_id                         = data.aws_ssm_parameter.user_pool_id.value
   generate_secret                      = true
-  callback_urls                        = var.redirect_urls
-  logout_urls                          = var.logout_urls
+  callback_urls                        = each.value.redirect_urls
+  logout_urls                          = each.value.logout_urls
   allowed_oauth_flows                  = ["code"]
   allowed_oauth_flows_user_pool_client = true
-  allowed_oauth_scopes                 = concat(var.scopes, var.custom_scopes)
+  allowed_oauth_scopes                 = concat(each.value.scopes, each.value.custom_scopes)
   supported_identity_providers         = ["COGNITO"]
-  explicit_auth_flows = var.application_name == "apli1" ? [
+
+  explicit_auth_flows = each.value.name == "apli1" ? [
     "ALLOW_USER_SRP_AUTH",
     "ALLOW_USER_PASSWORD_AUTH"
   ] : [
@@ -47,27 +50,29 @@ resource "aws_cognito_user_pool_client" "app_client" {
     "ALLOW_USER_SRP_AUTH"
   ]
 
-  access_token_validity        = var.access_token_validity.value
-  id_token_validity            = var.id_token_validity.value
-  refresh_token_validity       = var.refresh_token_validity.value
-
-  token_validity_units {
-    access_token  = var.access_token_validity.unit
-    id_token      = var.id_token_validity.unit
-    refresh_token = var.refresh_token_validity.unit
-  }
-
-  # Enable token revocation (for apli1)
-  enable_token_revocation = var.application_name == "apli1" ? true : false
-
-  # Enable refresh token rotation (for apli1)
-  dynamic "refresh_token_rotation_rules" {
-    for_each = var.application_name == "apli1" ? [1] : []
+  # ✅ Token rotation & revocation for only 'apli1'
+  dynamic "refresh_token_rotation" {
+    for_each = each.value.name == "apli1" ? [1] : []
     content {
-      rotation_duration_in_seconds = 3600  # 1 hour; range: 3,600s to 86,400s
+      feature                    = "ENABLED"
+      retry_grace_period_seconds  = 30
     }
   }
+
+  enable_token_revocation = each.value.name == "apli1" ? true : false
+
+  access_token_validity        = each.value.access_token_validity.value
+  id_token_validity            = each.value.id_token_validity.value
+  refresh_token_validity       = each.value.refresh_token_validity.value
+
+  token_validity_units {
+    access_token  = each.value.access_token_validity.unit
+    id_token      = each.value.id_token_validity.unit
+    refresh_token = each.value.refresh_token_validity.unit
+  }
+
 }
+
 # Read Branding Files only if paths are provided and files exist
 locals {
   apply_branding = var.branding_settings_path != "" && var.branding_assets_path != "" ? fileexists(var.branding_settings_path) && fileexists(var.branding_assets_path) : false
