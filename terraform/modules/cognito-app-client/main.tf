@@ -46,7 +46,7 @@ resource "aws_cognito_user_pool_client" "app_client" {
     "ALLOW_USER_AUTH",
     "ALLOW_USER_SRP_AUTH"
   ]
-  
+
   access_token_validity        = var.access_token_validity.value
   id_token_validity            = var.id_token_validity.value
   refresh_token_validity       = var.refresh_token_validity.value
@@ -56,8 +56,17 @@ resource "aws_cognito_user_pool_client" "app_client" {
     id_token      = var.id_token_validity.unit
     refresh_token = var.refresh_token_validity.unit
   }
-  enable_refresh_token_rotation = var.application_name == "apli1" ? true : false
 
+  # Enable token revocation (conditionally for apli1)
+  enable_token_revocation = var.application_name == "apli1" ? true : false
+
+  # Enable refresh token rotation (conditionally for apli1)
+  dynamic "refresh_token_rotation_rules" {
+    for_each = var.application_name == "apli1" ? [1] : []
+    content {
+      rotation_duration_in_seconds = 3600  # 1 hour; adjust as needed (3,600s to 86,400s)
+    }
+  }
 }
 
 # Read Branding Files only if paths are provided and files exist
