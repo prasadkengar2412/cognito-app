@@ -29,21 +29,19 @@ data "aws_ssm_parameter" "user_pool_id" {
 
 # Create App Client in existing User Pool
 resource "aws_cognito_user_pool_client" "app_client" {
-  for_each = { for app in local.apps : app.name => app }
-
-  name                                 = "ulng-appclient-${each.value.name}-${each.value.client_type}-${var.env}"
+  name                                 = "ulng-appclient-${var.application_name}-${var.client_type}-${var.env}"
   user_pool_id                         = data.aws_ssm_parameter.user_pool_id.value
   generate_secret                      = true
-  callback_urls                        = each.value.redirect_urls
-  logout_urls                          = each.value.logout_urls
+  callback_urls                        = var.redirect_urls
+  logout_urls                          = var.logout_urls
   allowed_oauth_flows                  = ["code"]
   allowed_oauth_flows_user_pool_client = true
-  allowed_oauth_scopes                 = concat(each.value.scopes, each.value.custom_scopes)
+  allowed_oauth_scopes                 = concat(var.scopes, var.custom_scopes)
   supported_identity_providers         = ["COGNITO"]
-
-  explicit_auth_flows = each.value.name == "apli1" ? [
+  explicit_auth_flows = var.application_name == "apli1" ? [
     "ALLOW_USER_SRP_AUTH",
-    "ALLOW_USER_PASSWORD_AUTH"
+    "ALLOW_USER_PASSWORD_AUTH",
+    "ADMIN_NO_SRP_AUTH"
   ] : [
     "ALLOW_REFRESH_TOKEN_AUTH",
     "ALLOW_USER_AUTH",
@@ -52,14 +50,14 @@ resource "aws_cognito_user_pool_client" "app_client" {
 
   # ✅ Token rotation & revocation for only 'apli1'
   dynamic "refresh_token_rotation" {
-    for_each = each.value.name == "apli1" ? [1] : []
+    for_each = var.application_name == "apli1" ? [1] : []
     content {
       feature                    = "ENABLED"
       retry_grace_period_seconds  = 30
     }
   }
 
-  enable_token_revocation = each.value.name == "apli1" ? true : false
+  enable_token_revocation = var.application_name == "apli1" ? true : false
 
   access_token_validity        = each.value.access_token_validity.value
   id_token_validity            = each.value.id_token_validity.value
