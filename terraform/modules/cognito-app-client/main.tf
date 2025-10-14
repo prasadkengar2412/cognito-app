@@ -38,7 +38,7 @@ resource "aws_cognito_user_pool_client" "app_client" {
   allowed_oauth_flows_user_pool_client = true
   allowed_oauth_scopes                 = concat(var.scopes, var.custom_scopes)
   supported_identity_providers         = ["COGNITO"]
-  explicit_auth_flows = each.value.name == "apli1" ? [
+  explicit_auth_flows = var.application_name == "apli1" ? [
     "ALLOW_USER_SRP_AUTH",
     "ALLOW_USER_PASSWORD_AUTH"
   ] : [
@@ -46,6 +46,8 @@ resource "aws_cognito_user_pool_client" "app_client" {
     "ALLOW_USER_AUTH",
     "ALLOW_USER_SRP_AUTH"
   ]
+
+  enable_refresh_token_rotation = var.application_name == "apli1" ? true : false
   access_token_validity        = var.access_token_validity.value
   id_token_validity            = var.id_token_validity.value
   refresh_token_validity       = var.refresh_token_validity.value
